@@ -1,36 +1,42 @@
-
-
 export const niveles = (experiencia) => {
-    // Define el umbral de experiencia para cada nivel
-    const insignias = {
-      1: "Principiante",
-      2: "Aprendiz",
-      3: "Estudiante Fiel",
-      4: "Apasionado",
-      5: "Dedicado",
-      6: "Estudioso",
-      7: "Entendedor",
-      8: "Conocedor Bíblico",
-      9: "Sabio",
-      10: "Maestro",
-      11: "Profesor",
-    };
-  
-    // Define la fórmula para calcular el nivel
-    const experienciaPorNivel = 200; // Experiencia requerida por nivel
-    let nivel = Math.floor(experiencia / experienciaPorNivel) + 1;
-  
-    // Limitar el nivel al máximo definido en insignias
-    const maxNivel = Object.keys(insignias).length;
-    if (nivel > maxNivel) {
-      nivel = maxNivel;
+  // Mapeo de insignias con sus animaciones
+  const insignias = {
+    1: {
+      name: "Principiante",
+      animation: require("../../assets/lottieFiles/insigniasNivel/award.json")// Ruta en tu carpeta public
+    },
+    2: {
+      name: "Aprendiz",
+      animation: require("../../assets/lottieFiles/insigniasNivel/award.json")
+    },
+    3: {
+      name: "Estudiante Fiel",
+      animation: require("../../assets/lottieFiles/insigniasNivel/award.json")
+    },
+    4: {
+      name: "Profesional",
+      animation: require("../../assets/lottieFiles/insigniasNivel/award.json")
+    },
+    5: {
+      name: "Maestro",
+      animation: require("../../assets/lottieFiles/insigniasNivel/award.json")
+    },
+    6: {
+      name: "Maestro Maestro",
+      animation: require("../../assets/lottieFiles/insigniasNivel/award.json")
     }
-  
-  
-  
-    return {
-      nivel,
-      insignia: insignias[nivel] || '...',
-    };
+    
   };
+
+  const experienciaPorNivel = 200;
+  let nivel = Math.floor(experiencia / experienciaPorNivel) + 1;
+  const maxNivel = Object.keys(insignias).length;
   
+  nivel = nivel > maxNivel ? maxNivel : nivel;
+
+  return {
+    nivel,
+    insignia: insignias[nivel]?.name || '...',
+    animation: insignias[nivel]?.animation || '/animations/default.json'
+  };
+};

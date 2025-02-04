@@ -7,7 +7,10 @@ import {
   Alert,
   Share,
   Image,
-  Dimensions,
+  SafeAreaView,
+  ScrollView,
+  ImageBackground,
+  
 } from "react-native";
 import { Feather, AntDesign } from "@expo/vector-icons";
 import { db } from "../../components/firebase/firebaseConfig";
@@ -25,7 +28,7 @@ import {
 import useAuth from "@/app/authContext";
 import * as Clipboard from "expo-clipboard";
 import { useNavigation } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
+import { LinearGradient } from "expo-linear-gradient";	
 
 const VersiculosDiarios = () => {
   const { user } = useAuth();
@@ -169,63 +172,112 @@ const VersiculosDiarios = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card} >
-        <Text style={styles.reference}>{versiculo?.versiculo}</Text>
-        <View style={styles.content}>
-          <Text style={styles.text}>{versiculo?.texto}</Text>
-          <Image
-            source={require("../../assets/images/jesus.jpg")}
-            style={styles.image}
-            resizeMode="cover"
-          />
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.card}>
+          {/* Referencia del versículo */}
+          <Text style={styles.reference}>{versiculo?.versiculo}</Text>
+          
+          {/* Contenido: Imagen y Texto */}
+          <View style={styles.content}>
+            <Image
+              source={require("../../assets/images/jesus.jpg")}
+              style={styles.image}
+              resizeMode="cover"
+            />
+            <Text style={styles.text}>{versiculo?.texto}</Text>
+          </View>
+          
+          {/* Botones de acción */}
+          <View style={styles.actionsContainer}>
+            <Pressable style={styles.actionButton} onPress={copiar}>
+              <Feather name="copy" size={20} color="#555" />
+              <Text style={styles.actionText}>Copiar</Text>
+            </Pressable>
+            <Pressable style={styles.actionButton} onPress={share}>
+              <Feather name="share-2" size={20} color="#555" />
+              <Text style={styles.actionText}>Compartir</Text>
+            </Pressable>
+            <Pressable style={styles.actionButton} onPress={guardar}>
+              <AntDesign
+                name={versiculoGuardado ? "heart" : "hearto"}
+                size={20}
+                color={versiculoGuardado ? "#e74c3c" : "#555"}
+              />
+              <Text style={styles.actionText}>Guardar</Text>
+            </Pressable>
+          </View>
         </View>
-      <View style={styles.divider} />
-      <View style={styles.actionsContainer}>
-        <Pressable style={styles.actionButton} onPress={copiar}>
-          <Feather name="copy" size={24} color="gray" />
-          <Text style={styles.actionText}>Copiar</Text>
-        </Pressable>
-        <Pressable style={styles.actionButton} onPress={share}>
-          <Feather name="share-2" size={24} color="gray" />
-          <Text style={styles.actionText}>Compartir</Text>
-        </Pressable>
-        <Pressable style={styles.actionButton} onPress={guardar}>
-          <AntDesign
-            name={versiculoGuardado ? "heart" : "hearto"}
-            size={24}
-            color={versiculoGuardado ? "red" : "gray"}
-          />
-          <Text style={styles.actionText}>Guardar</Text>
-        </Pressable>
-      </View>
-      </View>
-      
-      
-    </View>
+      </ScrollView>
+    
+    
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f8f8", padding: 5 },
-  card: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
+
+  container: {
+    flexGrow: 1,
+    padding: 5,
+    backgroundColor: '#f0f4f7',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  reference: { fontSize: 18, textAlign: "right", marginBottom: 8 },
-  content: { flexDirection: "row", alignItems: "center" },
-  text: { flex: 1, fontSize: 20, marginRight: 8 },
-  image: { width: 80, height: 80, borderRadius: 40 },
-  divider: { height: 0.5, backgroundColor: "#ccc", marginVertical: 16 },
-  actionsContainer: { flexDirection: "row", justifyContent: "flex-start",gap: 16 },
-  actionButton: { alignItems: "center" },
-  actionText: { color: "gray", marginTop: 4 },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  reference: {
+    fontSize: 20,
+    textAlign: "right",
+    marginBottom: 12,
+    color: "#333",
+    fontWeight: 'bold',
+  },
+  content: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  image: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: "#ddd",
+  },
+  text: {
+    flex: 1,
+    fontSize: 18,
+    color: "#444",
+    marginLeft: 12,
+    lineHeight: 24,
+  },
+  actionsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  actionButton: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 10,
+    backgroundColor: '#f9f9f9',
+    marginHorizontal: 4,
+    borderRadius: 8,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  actionText: {
+    color: "#555",
+    fontSize: 14,
+    marginLeft: 6,
+  },
 });
 
 export default VersiculosDiarios;

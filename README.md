@@ -1,5 +1,40 @@
 # Welcome to your Expo app 👋
 
+# Cosas pendientes
+1. obtener las lectura diaria para hacer un historialcon ellas
+2. hacer que se quite el icono de notifcacion para el quiz solo si se completo el quiz
+3. mejorar el audio de lecturas
+4. terminar de añadir todos las animaciones para cada nivel
+
+
+
+# Cosas Hechas
+
+1. Lectura Diaria Añadida
+2. perfil UI mejorado
+3. modales mejorados (UI)
+4. Aqui cambie el proyecto de firebase y las keys **********************
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
 ## Get started

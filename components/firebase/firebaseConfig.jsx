@@ -5,12 +5,12 @@ import { getFirestore } from "firebase/firestore";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAoxVziFmF1MWOmK6y-mYXXRxI4-vwAA6s",
-  authDomain: "bible-game-mobile.firebaseapp.com",
-  projectId: "bible-game-mobile",
-  storageBucket: "bible-game-mobile.firebasestorage.app",
-  messagingSenderId: "4928746886",
-  appId: "1:4928746886:web:bcb52c4c2d966008aae807"
+ apiKey: "AIzaSyAzn6d_z3X60zVFpzSjezUu6t53CKqVja4",
+  authDomain: "bible-game1.firebaseapp.com",
+  projectId: "bible-game1",
+  storageBucket: "bible-game1.firebasestorage.app",
+  messagingSenderId: "1001847642825",
+  appId: "1:1001847642825:web:9f7b546db97ac77cf68b18"
 };
 
 // Initialize Firebase

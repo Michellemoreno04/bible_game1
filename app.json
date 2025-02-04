@@ -25,6 +25,7 @@
     },
     "plugins": [
       "expo-router",
+      "@react-native-google-signin/google-signin",
       [
         "expo-splash-screen",
         {
@@ -46,5 +47,6 @@
         "projectId": "e83e168f-b5c9-4951-a256-5cca2f43fe9f"
       }
     }
+    
   }
 }

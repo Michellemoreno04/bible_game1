@@ -99,6 +99,22 @@ export default function RootLayout() {
                 headerBackTitle: "back",
               }}
             />
+            <Stack.Screen
+              name="dailyReading"
+              options={{
+                headerShown: true,
+                headerTitle: "Lectura Diaria",
+                headerBackTitle: "volver",
+              }}
+            />
+            <Stack.Screen
+              name="lecturasVistas"
+              options={{
+                headerShown: true,
+                headerTitle: "Lecturas Vistas",
+                headerBackTitle: "volver",
+              }}
+            />
             <Stack.Screen name="+not-found" />
           </Stack>
           <StatusBar style="auto" />

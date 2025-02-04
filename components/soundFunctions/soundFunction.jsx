@@ -69,6 +69,8 @@ export function useBackgroundMusic() {
       } catch (error) {
         console.error('Error toggling mute:', error);
       }
+    }else{
+      startMusic();
     }
   };
 

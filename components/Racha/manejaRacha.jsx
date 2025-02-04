@@ -10,8 +10,6 @@ import { useSound } from '../soundFunctions/soundFunction';
  */
 export const manejarRachaDiaria = async (userId, setShowModalRacha) => {
 
-  
-  
   try {
     
     const userDocRef = doc(db, 'users', userId);
@@ -86,3 +84,7 @@ export const manejarRachaDiaria = async (userId, setShowModalRacha) => {
     Alert.alert('Error', 'No se pudo verificar la racha diaria.');
   }
 };
+
+
+// aqui manejaremos las notificaciones de la racha
+

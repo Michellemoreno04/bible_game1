@@ -11,7 +11,6 @@ import { ModalRacha } from '@/components/Modales/modalRacha';
 import {manejarRachaDiaria} from '@/components/Racha/manejaRacha';
 import { useSound } from '@/components/soundFunctions/soundFunction';
 import { useBackgroundMusic } from '@/components/soundFunctions/soundFunction';
-import { LinearGradient } from 'expo-linear-gradient';
 
 
 const BibleQuiz = () => {
@@ -72,7 +71,7 @@ if (preguntas.length === 0) {
       Alert.alert('Error', 'No se pudieron obtener mas preguntas.');
     }
   };
-
+// Escucha en tiempo real para obtener las preguntas
   useEffect(() => {
     if(navigation.addListener('focus', () => {
       fetchQuestions()
@@ -162,7 +161,9 @@ if (preguntas.length === 0) {
           await updateDoc(userDocRef, {
             Monedas: userInfo.Monedas + monedasGanadas + 10
           });
-        setShowModal(true); // Muestra el modal de puntuación
+          
+          setShowModal(true); // Muestra el modal de puntuación
+
         
       }
     } else {
@@ -330,15 +331,15 @@ useEffect(() => {
     stopMusic();
   };
 }, [])
-
+ 
 
   return (
     
     <SafeAreaView>
- <ModalPuntuacion expGanada={expGanada} monedasGanadas={monedasGanadas} respuestasCorrectas={resultadoRespuestas} isVisible={showModal} onClose={mostrarModalRacha}/>  
+ <ModalPuntuacion userInfo={userInfo} expGanada={expGanada} monedasGanadas={monedasGanadas} respuestasCorrectas={resultadoRespuestas} isVisible={showModal} onClose={mostrarModalRacha}/>  
 <ModalRacha userInfo={userInfo} isVisible={showModalRacha} setShowModalRacha={setShowModalRacha}  />
-     
-    <View  className='w-full h-full  flex items-center bg-slate-400 '>
+     <ImageBackground source={require('../assets/images/bg-quiz.png')} resizeMode="cover" style={styles.backgroundImage}>
+    <View  className='w-full h-full  flex items-center '>
    
       <View className='w-full flex flex-row justify-between items-center '>
       
@@ -353,7 +354,7 @@ useEffect(() => {
         <Text style={styles.status}>{userInfo.Monedas}</Text>
         </View>
       </View>
-    
+     
      <View className='w-full h-[90%] rounded-md  flex items-center p-5 '>
      
        <View className='w-full flex flex-row justify-end '>
@@ -407,7 +408,7 @@ useEffect(() => {
 
       <TouchableOpacity
       style={styles.comprobar}
-       className='w-full h-16  bg-blue-500 rounded-md flex items-center justify-center flex-row gap-2 m-5'
+       className='w-52 h-16 rounded-md flex items-center justify-center flex-row gap-2 m-5'
        onPress={comprobarRespuesta}
        >
         
@@ -434,6 +435,7 @@ useEffect(() => {
       
       </View>
     </View>
+    </ImageBackground>
   
     </SafeAreaView>
     
@@ -445,17 +447,17 @@ const styles = StyleSheet.create({
  questionContainer: {
   height: 250,
     borderRadius: 20,
-    padding: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    padding: 5,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     
   },
   respuestas: {
    // boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.7)',
-   backgroundColor: 'rgba(0, 0, 0, 0.7)',
+   backgroundColor: 'rgba(0, 0, 0, 0.3)',
   borderRadius: 50,
   },
   comprobar: {
- 
+    backgroundColor: 'rgba(0, 0,255, 0.8)',
   borderRadius: 50,
   },
  
@@ -473,8 +475,8 @@ const styles = StyleSheet.create({
   backgroundImage: {
     width: '100%',
     resizeMode: 'cover',
-    borderRadius: 20,
-    overflow: 'hidden',
+    //borderRadius: 20,
+    //overflow: 'hidden',
   },
   
 
