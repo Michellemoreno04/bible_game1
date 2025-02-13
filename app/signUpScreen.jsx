@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Pressable } from "react-native";
-import { AntDesign, FontAwesome, FontAwesome6 } from "@expo/vector-icons";
+import { View, Text, Pressable, KeyboardAvoidingView, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import useAuth from "./authContext";
+import useAuth from "../components/authContext/authContext";
 import LottieView from "lottie-react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link } from "expo-router";
 
 import { SigninComponents } from "../components/signinComponents/signinComponents";
 
@@ -16,85 +14,63 @@ export default function SignUpScreen() {
 
 
   return (
-    <LinearGradient colors={["#ffcc00", "#ff8a00"]} style={{ flex: 1 }}>
-      <View className="w-full h-full    flex items-center justify-center p-5 ">
-        <Text className="text-center text-3xl font-bold text-white">
-          Bienvenido a "BibleBrain"
-        </Text>
-        <Text className="text-center text-lg pb-5  text-gray-100">
-          Nuestra app está diseñada para ayudarte a estudiar la Biblia todos los
-          días y fortalecer tu relación espiritual.
-        </Text>
-        <View className="p-10">
-          <LottieView
-            source={require("../assets/lottieFiles/llegaste.json")}
-            autoPlay
-            loop
-            style={{ width: 300, height: 300 }}
-          />
-        </View>
-
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('signUp')} >
-          <FontAwesome
-            name="envelope"
-            size={24}
-            color="white"
-            style={styles.icon}
-          />
-          <Text style={styles.buttonText}>Registrate</Text>
-        </TouchableOpacity>
-        <Text>
-          ¿Ya tienes una cuenta?
-           <Link href='/login' style={{color: 'blue'}}> Inicia sesión
-          </Link>
-        </Text>
-
-
-       <SigninComponents />
-      </View>
-    </LinearGradient>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  description: {
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
-    marginBottom: 40,
-  },
-  button: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#4CAF50",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 20,
-    width: "80%",
-  },
-  buttonText: {
-    color: "white",
-    fontSize: 20,
-    fontWeight: "bold",
-    textAlign: "center",
+    <LinearGradient 
+    colors={['#1D2671', '#C33764']} // Mismos colores que en el login
+    style={{ flex: 1 }}
+  >
     
-  },
-  icon: {
-    marginRight: 10,
-  },
-});
+      <ScrollView 
+        contentContainerStyle={{ flexGrow: 1 }} 
+        keyboardShouldPersistTaps="handled"
+      >
+        <View className="flex-1 px-8 justify-center pb-16">
+          {/* Sección de Logo y Título */}
+          <View className="items-center mb-12">
+            <Text className="text-5xl font-bold text-white mb-2 shadow-lg">
+              BibleBrain
+            </Text>
+            <Text className="text-lg text-gray-200">
+              Bienvenido a BibleBrain
+            </Text>
+          </View>
+
+          {/* Mensaje de Bienvenida / Descripción */}
+          <Text className="text-center text-lg text-gray-200 mb-6">
+            Nuestra app está diseñada para ayudarte a estudiar la Biblia todos los días y fortalecer tu relación espiritual.
+          </Text>
+
+          {/* Animación Lottie */}
+          <View className="items-center mb-10">
+            <LottieView
+              source={require("../assets/lottieFiles/llegaste.json")}
+              autoPlay
+              loop
+              style={{ width: 300, height: 300 }}
+            />
+          </View>
+
+          {/* Botón de Registro */}
+          <Pressable
+            onPress={() => navigation.navigate('signUp')}
+            className="bg-amber-500 rounded-xl p-4 items-center justify-center shadow-lg active:opacity-80 mb-4"
+            android_ripple={{ color: '#ffffff50' }}
+          >
+            <Text className="text-white text-xl font-bold">Registrate</Text>
+          </Pressable>
+
+          {/* Enlace a Pantalla de Inicio de Sesión */}
+          <View className="flex-row justify-center">
+            <Text className="text-white/90">¿Ya tienes una cuenta? </Text>
+            <Pressable onPress={() => navigation.navigate('login')}>
+              <Text className="text-amber-400 font-semibold underline">Inicia sesión</Text>
+            </Pressable>
+          </View>
+
+          
+          <SigninComponents />
+        </View>
+      </ScrollView>
+    
+  </LinearGradient>
+);
+};

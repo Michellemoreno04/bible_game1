@@ -10,7 +10,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { AuthProvider } from "./authContext";
+import { AuthProvider } from "../components/authContext/authContext";
 import { PaperProvider } from "react-native-paper";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -107,12 +107,20 @@ export default function RootLayout() {
                 headerBackTitle: "volver",
               }}
             />
+            
             <Stack.Screen
               name="lecturasVistas"
               options={{
                 headerShown: true,
                 headerTitle: "Lecturas Vistas",
                 headerBackTitle: "volver",
+              }}
+            />
+            <Stack.Screen
+              name="welcomeScreen"
+              options={{
+                headerShown: false,
+                
               }}
             />
             <Stack.Screen name="+not-found" />

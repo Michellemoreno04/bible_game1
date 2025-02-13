@@ -1,19 +1,8 @@
 import { Text, View, StyleSheet, SafeAreaView, ScrollView, Alert } from 'react-native';
 import '../global.css';
-import { Link } from 'expo-router';
-import { AntDesign, MaterialCommunityIcons } from '@expo/vector-icons';
-import useAuth from './authContext';
-import React, { useEffect, useState } from 'react';
-import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
-import { db } from '@/components/firebase/firebaseConfig';
-import { Avatar } from 'react-native-paper';
-import { niveles } from '@/components/Niveles/niveles';
-import VersiculosDiarios from '@/components/VersiculoDiario/versiculoDiario';
-import NivelModal from '@/components/Modales/modalNivel';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from 'expo-router';
-import AppComponent from './(tabs)';
-//import AppComponent from './(tabs)';
+
+import React from 'react';
+
 
 
 export default  function Home() {

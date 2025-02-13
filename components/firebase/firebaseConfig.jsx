@@ -5,7 +5,7 @@ import { getFirestore } from "firebase/firestore";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
- apiKey: "AIzaSyAzn6d_z3X60zVFpzSjezUu6t53CKqVja4",
+  apiKey: "AIzaSyAzn6d_z3X60zVFpzSjezUu6t53CKqVja4",
   authDomain: "bible-game1.firebaseapp.com",
   projectId: "bible-game1",
   storageBucket: "bible-game1.firebasestorage.app",

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Modal, StyleSheet, Button, Share, TextInput } from 'react-native';
-import useAuth from '../../app/authContext';
+import useAuth from '../../components/authContext/authContext';
 import { doc, collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
 

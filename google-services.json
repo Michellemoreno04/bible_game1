@@ -1,0 +1,43 @@
+{
+  "project_info": {
+    "project_number": "1001847642825",
+    "project_id": "bible-game1",
+    "storage_bucket": "bible-game1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1001847642825:android:d843a813ec2afd8bf68b18",
+        "android_client_info": {
+          "package_name": "com.moreno.dev.Bible_game1"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1001847642825-j4e48dofmoke409n21ddfetct651bl9j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.moreno.dev.Bible_game1",
+            "certificate_hash": "342b6b4279e6dabc8f2b042cae2d3890203375a0"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBewFFM9Z2MR1Lv5ED9v7Gdqk2uIRn9flw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1001847642825-lvmjoh7ioi2g8phb6l54slksvuck2nb4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

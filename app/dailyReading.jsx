@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Share, Alert } from 'react-native';
 import Checkbox from 'expo-checkbox';
 import * as Speech from 'expo-speech';
 import { FontAwesome6, FontAwesome, MaterialIcons } from '@expo/vector-icons';
-import useAuth from  '../app/authContext';
+import useAuth from  '../components/authContext/authContext';
 import { db } from '../components/firebase/firebaseConfig';
 import { addDoc, collection, doc, getDocs, query, where } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 
@@ -16,7 +17,6 @@ const DailyReading = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [isRead, setIsRead] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
 
   const userId = user.uid;
 
@@ -30,6 +30,8 @@ const titulo = 'Reflexión Diaria';
 
     Esta historia nos recuerda que somos parte de un plan divino, diseñado con propósito y amor. Cada día es una oportunidad para reflexionar sobre nuestra relación con Dios y su creación.
   `;
+
+
 
   const handleSpeak = () => {
     if (!isSpeaking) {
@@ -58,11 +60,6 @@ const getLocalDateString = () => {
 };
 
 const handleReading = async () => {
-  if (!isChecked) {
-    Alert.alert('Debes marcar la casilla para confirmar la lectura');
-    return;
-  }
-
   try {
     const today = getLocalDateString();
     const userRef = doc(db, 'users', userId);
@@ -89,6 +86,9 @@ const handleReading = async () => {
       fecha: new Date(),
       fechaStr: today // Campo adicional para búsquedas
     });
+    const fechaActual = new Date().toDateString();
+    await AsyncStorage.setItem("lastReadingDate", fechaActual); // guardar la ultima vez que el usuario hizo el quiz
+     console.log('last reading date saved:', today);
      Alert.alert('Guardado', 'La lectura se ha guardado con éxito.');
     navigation.navigate('(tabs)');
     setIsChecked(false); // Resetear checkbox

@@ -1,12 +1,14 @@
 import React, { useState } from 'react'
-import { Text, View, Pressable, Alert, TextInput, KeyboardAvoidingView, ScrollView, StyleSheet } from 'react-native'
+import { Text, View, Pressable, Alert, TextInput, KeyboardAvoidingView, ScrollView, SafeAreaView,Platform } from 'react-native'
 import { useNavigation } from '@react-navigation/native';
 import { Link } from 'expo-router';
 import { auth } from '../components/firebase/firebaseConfig';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useRouter } from "expo-router";
 import { LinearGradient } from 'expo-linear-gradient';
-import { AntDesign, FontAwesome6 } from '@expo/vector-icons';
+import { AntDesign, FontAwesome, MaterialIcons } from '@expo/vector-icons';
+import { SigninComponents } from '../components/signinComponents/signinComponents';
+
 
 
 function Login() {
@@ -79,95 +81,90 @@ const handleFirebaseError = (error) => {
 
  
       return (
-        <LinearGradient colors={['#ffcc00', '#ff8a00']} style={{ flex: 1 }}>
-          <KeyboardAvoidingView >
-            <ScrollView>
-          <View className="w-full h-screen flex items-center justify-center p-8">
-            <View className="w-full h-full flex items-center justify-center gap-5">
-              
-              <Text className="text-3xl font-bold text-white">BibleBrain</Text>
-              <Text className="text-lg font-bold text-white">
-                Inicia sesión para continuar
-              </Text>
-      
-             
-              <TextInput
-                className="w-full h-16 border-2 border-white rounded-md p-2 text-white font-bold"
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor="#fff" /* Color gris para el placeholder */
-                required
-                value={loginCredentials.email}
-                textContentType="emailAddress"
-                onChangeText={(text) => handlerOnchange('email', text)}
-                
-              />
-      
-              {/* Input de Password */}
-              <TextInput
-              style={styles.input}
-                className="w-full h-16 border-2 border-white rounded-md p-2 text-white font-bold"
-                placeholder="Password"
-                placeholderTextColor="#fff"
-                required
-                secureTextEntry
-                value={loginCredentials.password}
-                textContentType="password"
-                onChangeText={(text) => handlerOnchange('password', text)}
-                
-              />
-      
-              
-              <Pressable
-              style={styles.input}
-                onPress={handleLogin}
-                className="w-full h-16 flex items-center justify-center rounded-md bg-blue-500 p-2"
-              >
-                <Text className="text-white text-lg font-bold">Inicia Sesión</Text>
-              </Pressable>
-      
-              {/* Sección de Login Alternativo */}
-              <View className="w-full flex flex-col items-center justify-center gap-2">
-                <Text className="text-white">- o inicia sesión con -</Text>
-      
-                <View className='w-full flex flex-row items-center justify-center gap-4'>
-   <Pressable className='w-full-white p-5 bg-white rounded-full'>
-                <AntDesign name="google" size={24} color="black" />
-            </Pressable>
-   <Pressable className='w-full-white p-5 bg-white rounded-full'>
-   <FontAwesome6 name="facebook" size={24} color="black" />
-            </Pressable>
-   <Pressable className='w-full-white p-5 bg-white rounded-full'>
-                <AntDesign name="apple1" size={24} color="black" />
-            </Pressable>
-   </View>
-      
-                {/* Link de Registro */}
-                <View className="w-full flex flex-row items-center justify-center gap-2">
-                  <Text className="text-white">¿No tienes una cuenta?</Text>
-                  <Link href="/signUp">
-                    <Text className="text-blue-500 font-bold bg">Regístrate</Text>
-                  </Link>
-                </View>
-              </View>
-            </View>
+        <LinearGradient 
+  colors={['#1D2671', '#C33764']} 
+  style={{ flex: 1 }}
+>
+  <KeyboardAvoidingView 
+    behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+    style={{ flex: 1 }}
+    keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+  >
+    <ScrollView 
+      contentContainerStyle={{ flexGrow: 1 }}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View className="flex-1 px-8 justify-center pb-16">
+        {/* Logo Section */}
+        <View className="items-center mb-12">
+          <Text className="text-5xl font-bold text-white mb-2 shadow-lg">BibleBrain</Text>
+          <Text className="text-lg text-gray-200">Tu conexión espiritual inteligente</Text>
+        </View>
+
+        {/* Form Section */}
+        <View className="space-y-6">
+          {/* Email Input */}
+          <View className="bg-white/10 rounded-xl p-3 mb-3 flex-row items-center">
+            <MaterialIcons name="email" size={24} color="#FFF" style={{ marginRight: 10 }} />
+            <TextInput
+              placeholder="Correo electrónico"
+              placeholderTextColor="#rgba(255,255,255,0.7)"
+              className="flex-1 text-white text-lg"
+              autoCapitalize="none"
+              keyboardType="email-address"
+              value={loginCredentials.email}
+              onChangeText={(text) => handlerOnchange('email', text)}
+            />
           </View>
-          </ScrollView>
-          </KeyboardAvoidingView>
-          </LinearGradient>
-        
+
+          {/* Password Input */}
+          <View className="bg-white/10 rounded-xl p-3 mb-3 flex-row items-center">
+            <MaterialIcons name="lock" size={24} color="#FFF" style={{ marginRight: 10 }} />
+            <TextInput
+              placeholder="Contraseña"
+              placeholderTextColor="#rgba(255,255,255,0.7)"
+              className="flex-1 text-white text-lg"
+              secureTextEntry
+              value={loginCredentials.password}
+              onChangeText={(text) => handlerOnchange('password', text)}
+            />
+          </View>
+
+          {/* Login Button */}
+          <Pressable
+            onPress={handleLogin}
+            className="bg-amber-500 rounded-xl p-4 items-center justify-center shadow-lg active:opacity-80"
+            android_ripple={{ color: '#ffffff50' }}
+          >
+            <Text className="text-white text-xl font-bold">Acceder</Text>
+          </Pressable>
+
+          {/* Social Login */}
+          <View className="py-6">
+            <View className="flex-row items-center mb-6">
+              <View className="flex-1 h-px bg-white/30" />
+              <Text className="px-4 text-white/80 text-sm">Continúa con</Text>
+              <View className="flex-1 h-px bg-white/30" />
+            </View>
+
+            <SigninComponents />
+          </View>
+
+          {/* Signup Link */}
+          <View className="flex-row justify-center pt-4">
+            <Text className="text-white/90">¿Nuevo aquí? </Text>
+            <Link href="/signUp" className="text-amber-400 font-semibold underline">
+              <Text className="text-amber-400 font-semibold underline">Crea una cuenta</Text>
+            </Link>
+          </View>
+        </View>
+      </View>
+    </ScrollView>
+  </KeyboardAvoidingView>
+</LinearGradient>
+
+
       );
 }
 
-
-
-const styles = StyleSheet.create({  
-  input: {
-    color: '#fff',
-    borderRadius: 30,
-   
-    padding: 10,
-  },
-});
-
-export default Login;
+export default Login

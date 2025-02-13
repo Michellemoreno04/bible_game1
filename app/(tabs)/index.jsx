@@ -1,22 +1,19 @@
-import { Text, View, StyleSheet, SafeAreaView, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { Text, View, StyleSheet, SafeAreaView, ScrollView, Alert, ActivityIndicator,Platform,StatusBar } from 'react-native';
 import '../../global.css';
-import {MaterialCommunityIcons} from '@expo/vector-icons';
-import useAuth from '../authContext';
+import {FontAwesome5, MaterialCommunityIcons} from '@expo/vector-icons';
+import useAuth from '../../components/authContext/authContext';
 import React, { useEffect, useState} from 'react';
-import { addDoc, arrayUnion, doc, getDoc, onSnapshot, orderBy, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import {db } from '@/components/firebase/firebaseConfig';
 import { Avatar } from 'react-native-paper';
 import { niveles } from '@/components/Niveles/niveles';
 import VersiculosDiarios from '@/components/VersiculoDiario/versiculoDiario';
 import NivelModal from '@/components/Modales/modalNivel';
-import { useNavigation } from 'expo-router';
+import { Link, useNavigation } from 'expo-router';
 import ExploraComponents from '@/components/exploraComponents/exploraComponents';
 import ShareButton from '@/components/compartir/share';
-import LottieView from 'lottie-react-native';
-
-
-
-
+import { LinearGradient } from 'expo-linear-gradient';
+import {ModalRachaPerdida} from '@/components/Modales/rachaPerdida';
 
 export default function AppComponent() {
   const { user } = useAuth();
@@ -25,10 +22,10 @@ export default function AppComponent() {
   const [showNivelModal, setShowNivelModal] = useState(false);
   const [nivelAnterior, setNivelAnterior] = useState(null);
   const [isLoading, setIsLoading] = useState(true); // Nuevo estado de carga
+  const [showModalRacha, setShowModalRacha] = useState(false);// Estado para mostrar el modal de racha
 
   const userId = user?.uid;
-
- 
+ // Función para verificar si el usuario está autenticado
   useEffect(() => {
     if (!userId) return;
 
@@ -58,6 +55,7 @@ export default function AppComponent() {
 
     return () => unsubscribe();
   }, [userId]);
+
 
   useEffect(() => {
     const guardarInsignia = async () => {
@@ -95,15 +93,20 @@ export default function AppComponent() {
   }
 
   return (
-      <SafeAreaView>
-        <View style={styles.screen} className='bg-gray-100' >
+    <LinearGradient
+      colors={['#ffffff', '#e8f4f8']}
+      style={styles.container}
+    >
+      <SafeAreaView style={{ flex: 1 }}>
         <ScrollView >
+        <View style={styles.screen} >
           <NivelModal
           Exp={userAuthenticated?.Exp}
             nivel={userAuthenticated?.Nivel}
             isVisible={showNivelModal}
             onClose={() => setShowNivelModal(false)}
           />
+          
           
           <View style={styles.headerContainer}>
   {/* Contenedor Izquierdo: Avatar e Información */}
@@ -122,7 +125,7 @@ export default function AppComponent() {
   {/* Contenedor Derecho: Racha */}
   <View style={styles.rachaContainer}>
     <Text style={styles.rachaText}>{userAuthenticated?.Racha || 0}</Text>
-    <MaterialCommunityIcons name="lightning-bolt-outline" size={26} color="black" />
+    <FontAwesome5 name="fire-alt" size={24} color="#FFD700" />
   </View>
 </View>
 
@@ -131,28 +134,33 @@ export default function AppComponent() {
             <ExploraComponents />
             <ShareButton />
             
-        </ScrollView>
           </View>
-      </SafeAreaView>
-    
+        </ScrollView>
+          </SafeAreaView>
+      
+          </LinearGradient>
   );
 }
 
 
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   screen: {
     height: '100%',
     padding: 10,
     
   },
   headerContainer: {
+    width: '100%',
+   
     flexDirection: 'row',
     justifyContent: 'space-between', 
     alignItems: 'center',
     paddingHorizontal: 10,
-    marginBottom: 20,
-    
+    marginBottom: 15,
    
   },
   leftContainer: {
@@ -178,16 +186,17 @@ const styles = StyleSheet.create({
     bottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f0f0f0', // Fondo claro
+    backgroundColor: '#FFF3E0',
     paddingVertical: 5,
     paddingHorizontal: 10,
-    borderRadius: 20,
-    elevation: 2, // Sombra sutil
+    borderRadius: 50,
+    gap: 5,
   },
   rachaText: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginRight: 5, // Separación entre texto e ícono
+    color: '#FFA000',
+    marginLeft: 5,
   },
 
 });

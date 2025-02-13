@@ -6,8 +6,6 @@ import {
     TouchableOpacity,
     ScrollView,
   } from "react-native";
-  import "../../global.css";
-  import { Link } from "expo-router";
   import {
     AntDesign,
     FontAwesome5,
@@ -17,7 +15,6 @@ import {
   import { useNavigation } from "expo-router";
   import LottieView from "lottie-react-native";
   import AsyncStorage from "@react-native-async-storage/async-storage";
-import { LinearGradient } from "expo-linear-gradient";
 
 
 
@@ -28,6 +25,7 @@ import { LinearGradient } from "expo-linear-gradient";
     const animationRef = useRef(null);
     const [selectedTab, setSelectedTab] = useState("inicio");
     const [hasDoneQuizToday, setHasDoneQuizToday] = useState(false);
+    const [hasReadTheDailyVerse, setHasReadTheDailyVerse] = useState(false);
 
     const tabs = [
         { key: "inicio", label: "Inicio" },
@@ -44,28 +42,55 @@ import { LinearGradient } from "expo-linear-gradient";
 
       if (lastQuizDate === today) {
         setHasDoneQuizToday(true); // El usuario ya hizo el quiz hoy
+        //console.log("El usuario ya hizo el quiz hoy");
       } else {
         setHasDoneQuizToday(false); // El usuario no ha hecho el quiz hoy
+       // console.log("El usuario no ha hecho el quiz hoy");
       }
     };
 
     checkQuizStatus();
   }, []);
 
-    const handleAnimationPress = () => {
+ // verificar el estado de la lectura diaria
+useEffect(() => {
+  const checkReadingStatus = async () => {
+    const lastReadingDate = await AsyncStorage.getItem("lastReadingDate");
+    const today = new Date().toDateString();
+    console.log('ha leido la ultima vez',lastReadingDate);
+ 
+
+ if (lastReadingDate === null) {
+  await AsyncStorage.setItem("lastReadingDate", today);
+  console.log('se ha seteado la ultima lectura');
+  return;
+ }
+   
+    if (lastReadingDate !== today) {
+      setHasReadTheDailyVerse(false);
+    } else {
+      setHasReadTheDailyVerse(true);
+      
+    }
+    
+  };
+
+  checkReadingStatus();
+}, []);
+
+
+
+const handleAnimationPress = () => {
       setShowFullScreen(true);
     };
   
     const handleAnimationFinish = async () => {
       animationRef.current?.play(0, 300);
       setShowFullScreen(false);
-                // Guardar la fecha actual como la última vez que el usuario hizo el quiz
-  const today = new Date().toDateString();
-  await AsyncStorage.setItem("lastQuizDate", today);
-  console.log('Fecha del último quiz guardada:', today);
-
+ 
       navigation.navigate("bibleQuiz");
     };
+   
   
     return (
       <View>
@@ -74,19 +99,31 @@ import { LinearGradient } from "expo-linear-gradient";
         </View>
         
         {/* Navegación superior */}
-        <View className=" flex flex-row gap-2 mt-4 ">
-          {tabs.map((tab) => (
-            <TouchableOpacity
-              key={tab.key}
-              className={` px-4 py-2 rounded-full ${
-                selectedTab === tab.key ? " bg-blue-100 p-3" : "bg-white p-3"
-              }`}
-              onPress={() => setSelectedTab(tab.key)}
-            >
-              <Text className={selectedTab === tab.key ? "text-black" : "text-black"}>{tab.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <View className="flex flex-row gap-2 mt-4">
+  {tabs.map((tab) => (
+    <TouchableOpacity
+      key={tab.key}
+      className={`px-4 py-2 rounded-full relative ${
+        selectedTab === tab.key ? "bg-blue-100 p-3" : "bg-white p-3"
+      }`}
+      onPress={() => setSelectedTab(tab.key)}
+    >
+      <View className="flex-row items-center">
+         {/* Notificación para Lectura Diaria */}
+         {tab.key === "Lectura Diaria" && !hasReadTheDailyVerse && (
+          <View >
+             <Ionicons name="alert" size={24} color="red" />
+          </View>
+        )}
+        <Text>
+          {tab.label}
+        </Text>
+        
+       
+      </View>
+    </TouchableOpacity>
+  ))}
+</View>
         
 
        
@@ -113,8 +150,8 @@ import { LinearGradient } from "expo-linear-gradient";
             <Text className="text-white font-bold text-lg">
               Refuerza tus conocimientos
             </Text>
-            {!hasDoneQuizToday && ( // Mostrar ícono si no ha hecho el quiz hoy
-                  <View className=" w-full h-full flex flex-row justify-end relative top-10 right-0 " >
+            {!hasDoneQuizToday &&  ( // Mostrar ícono si no ha hecho el quiz hoy
+                  <View style={styles.notificationIcon}>
                     <LottieView source={require("../../assets/lottieFiles/notification-quiz.json")}
                      renderMode="cover" autoPlay loop
                      style={styles.notificationLottie}	
@@ -157,8 +194,8 @@ import { LinearGradient } from "expo-linear-gradient";
                   Lectura Diaria
                 </Text>
 
-                {!hasDoneQuizToday && ( // Mostrar ícono si no ha hecho el quiz hoy
-                  <View className=" flex flex-row justify-end  " >
+                {!hasReadTheDailyVerse && ( // Mostrar ícono si no ha leido la lectura diaria
+                  <View style={styles.notificationIcon} >
                     <LottieView source={require("../../assets/lottieFiles/notification-quiz.json")}
                      renderMode="cover" autoPlay loop
                      style={styles.notificationLottie}	
@@ -197,10 +234,12 @@ import { LinearGradient } from "expo-linear-gradient";
               source={require("../../assets/lottieFiles/cerebro.json")}
               autoPlay
               loop={false}
-              style={{ width: "100%", height: "100%" }}
+              style={styles.modalLottie}
               resizeMode="contain"
               onAnimationFinish={handleAnimationFinish}
             />
+
+            <Text style={styles.modalText}>-100</Text>
           </View>
         </Modal>
       </View>
@@ -217,6 +256,7 @@ const styles = StyleSheet.create({
       backgroundColor: "blue",
       borderRadius: 10, 
       padding: 10,
+      marginRight: 10
     },
    
     verciculos: {
@@ -230,6 +270,14 @@ const styles = StyleSheet.create({
       padding: 10,
       
     },
+    notificationIcon: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    top: 85,
+    left: 5,
+      
+    },
     lecturaDiaria: {
       
       width: 180,
@@ -240,7 +288,7 @@ const styles = StyleSheet.create({
      backgroundColor: "red",
       borderRadius: 10, 
       padding: 10,
-      
+      marginRight: 10
     },
     lecturas: {
       
@@ -272,9 +320,24 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   modalContainer: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.8)", // Fondo oscuro para resaltar la animación
+   position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "skyblue",
   },
+  modalText: {
+    fontSize: 26,
+    fontWeight: "bold",
+    color: "orange",
+  },
+  modalLottie: {
+    width: 400,
+    height: 400,
+  },
+ 
+  
 });

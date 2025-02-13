@@ -7,8 +7,9 @@ import { Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { db } from '../../components/firebase/firebaseConfig';
 import { doc, onSnapshot } from 'firebase/firestore';
-import useAuth from '@/app/authContext';
+import useAuth from '../authContext/authContext';
 import { useSound } from '../soundFunctions/soundFunction';
+import { LinearGradient } from 'expo-linear-gradient';
 
 
 export function ModalRacha({ isVisible, setShowModalRacha }) {
@@ -56,119 +57,171 @@ useEffect(() => {
     };
 
   return (
-    <Modal isVisible={isVisible}>
-      <View style={styles.modalContainer}>
-        <Text style={styles.title}>Racha Diaria</Text>
-
+    <Modal isVisible={isVisible} animationIn="zoomIn" animationOut="zoomOut">
+    <View style={styles.modalContainer}>
+      <Text style={styles.title}>🔥 Récord Diario 🔥</Text>
+  
+      {/* Anillo de progreso alrededor de la animación */}
+      <View style={styles.progressRing}>
         <View style={styles.animationContainer}>
           <LottieView
             source={require('../../assets/lottieFiles/fireRachaIcon.json')}
             autoPlay
             loop
-            style={{ width: 200, height: 200 }}
+            style={{ width: 180, height: 180 }}
           />
         </View>
-
-        <Text style={styles.highlightedText}>¡Sigue manteniendo tu racha!</Text>
-
-        <View style={styles.statsContainer}>
-          <View style={styles.statBox}>
-            <Text style={styles.statText}>
-              {userInfo.Racha}
-              <FontAwesome5 name="fire" size={24} color="orange" />
-            </Text>
-            <Text style={styles.labelText}>Días acumulados</Text>
+      </View>
+  
+      <Text style={styles.highlightedText}>
+        ¡Estás en llamas!{'\n'}Sigue así 🔥
+      </Text>
+  
+      <View style={styles.statsContainer}>
+        <View style={[styles.statBox, styles.elevatedBox]}>
+          <View style={styles.iconBadge}>
+            <FontAwesome5 name="fire" size={28} color="#FF6B35" />
           </View>
-
-          <View style={styles.statBox}>
-            <Text style={styles.statText}>
-              {userInfo.RachaMaxima}
-              <FontAwesome5 name="trophy" size={24} color="gold" />
-            </Text>
-            <Text style={styles.labelText}>Máxima racha</Text>
-          </View>
+          <Text style={styles.statNumber}>{userInfo.Racha}</Text>
+          <Text style={styles.statLabel}>Días consecutivos</Text>
         </View>
-
-        <View style={styles.footerContainer}>
-            <Text style={styles.footerText}>¡Sigue así! 🎉</Text>
-          <Pressable style={styles.closeButton} onPress={closeModal}>
-            <Text style={styles.closeButtonText}>Volver</Text>
-          </Pressable>
+  
+        <View style={[styles.statBox, styles.elevatedBox]}>
+          <View style={styles.iconBadge}>
+            <FontAwesome5 name="trophy" size={28} color="#FFD700" />
+          </View>
+          <Text style={styles.statNumber}>{userInfo.RachaMaxima}</Text>
+          <Text style={styles.statLabel}>Racha máxima</Text>
         </View>
       </View>
-    </Modal>
-  );
-}
+  
+      <View style={styles.footerContainer}>
+        <Pressable 
+          style={({pressed}) => [
+            styles.closeButton,
+            pressed && {transform: [{scale: 0.95}]}
+          ]} 
+          onPress={closeModal}
+        >
+          <LinearGradient
+            colors={['#FF6B35', '#FF8E53']}
+            style={styles.gradientButton}
+          >
+            <Text style={styles.closeButtonText}>¡Continuar racha!</Text>
+          </LinearGradient>
+        </Pressable>
+      </View>
+    </View>
+  </Modal>
+  )}
 
-const styles = StyleSheet.create({
-  modalContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    borderRadius: 10,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
-  },
-  animationContainer: {
-    width: 200,
-    height: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#4CAF50',
-    borderRadius: 100,
-    marginBottom: 20,
-    borderColor: 'green',
-    borderWidth: 5,
-  },
-  highlightedText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  statsContainer: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 20,
-  },
-  statBox: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 10,
-  },
-  statText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  labelText: {
-    fontSize: 16,
-    color: '#555',
-  },
-  footerContainer: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  footerText: {
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  closeButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-  },
-  closeButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-});
+  const styles = StyleSheet.create({
+    modalContainer: {
+      backgroundColor: '#FFF9F2',
+      borderRadius: 25,
+      padding: 25,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.1,
+      shadowRadius: 20,
+      elevation: 10,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: '800',
+      color: '#2F4858',
+      marginBottom: 15,
+      textAlign: 'center',
+      letterSpacing: 0.5,
+    },
+    progressRing: {
+      borderRadius: 150,
+      padding: 10,
+      backgroundColor: '#FFF2E6',
+      marginVertical: 20,
+      shadowColor: '#FF6B35',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.3,
+      shadowRadius: 15,
+    },
+    animationContainer: {
+      width: 200,
+      height: 200,
+      borderRadius: 100,
+      overflow: 'hidden',
+      backgroundColor: '#FFEEDD',
+      borderWidth: 5,
+      borderColor: '#FFD6B3',
+    },
+    highlightedText: {
+      fontSize: 22,
+      fontWeight: '700',
+      color: '#FF6B35',
+      textAlign: 'center',
+      lineHeight: 30,
+      marginVertical: 15,
+    },
+    statsContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      width: '100%',
+      marginVertical: 20,
+    },
+    statBox: {
+      alignItems: 'center',
+      padding: 20,
+      borderRadius: 15,
+      flex: 1,
+      marginHorizontal: 5,
+      backgroundColor: 'white',
+    },
+    elevatedBox: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 5 },
+      shadowOpacity: 0.1,
+      shadowRadius: 10,
+      elevation: 5,
+    },
+    iconBadge: {
+      backgroundColor: '#FFF2E6',
+      padding: 12,
+      borderRadius: 50,
+      marginBottom: 10,
+    },
+    statNumber: {
+      fontSize: 32,
+      fontWeight: '900',
+      color: '#2F4858',
+      marginBottom: 5,
+    },
+    statLabel: {
+      fontSize: 14,
+      color: '#6C757D',
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    closeButton: {
+      width: '100%',
+      borderRadius: 15,
+      overflow: 'hidden',
+      marginTop: 15,
+    },
+    gradientButton: {
+      paddingVertical: 15,
+      paddingHorizontal: 40,
+      alignItems: 'center',
+    },
+    closeButtonText: {
+      color: 'white',
+      fontSize: 18,
+      fontWeight: '700',
+      letterSpacing: 0.5,
+    },
+    footerText: {
+      fontSize: 16,
+      color: '#6C757D',
+      marginTop: 15,
+      fontStyle: 'italic',
+    },
+  });

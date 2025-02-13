@@ -4,13 +4,16 @@ import { AntDesign,FontAwesome5, MaterialCommunityIcons, Octicons} from '@expo/v
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { doc, updateDoc, onSnapshot, getDocs, collection,limit, query, where,addDoc, documentId } from 'firebase/firestore';
-import useAuth from './authContext';
+import useAuth from '../components/authContext/authContext';
 import { db } from '../components/firebase/firebaseConfig';
 import { ModalPuntuacion } from '@/components/Modales/modalPuntuacion';
 import { ModalRacha } from '@/components/Modales/modalRacha';
+import {ModalRachaPerdida} from '@/components/Modales/rachaPerdida';
 import {manejarRachaDiaria} from '@/components/Racha/manejaRacha';
 import { useSound } from '@/components/soundFunctions/soundFunction';
 import { useBackgroundMusic } from '@/components/soundFunctions/soundFunction';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Modal } from 'react-native-web';
 
 
 const BibleQuiz = () => {
@@ -25,12 +28,17 @@ const {startMusic,stopMusic,isMuted,toggleMute} = useBackgroundMusic()
   const [mostrarRespuestaCorrecta, setMostrarRespuestaCorrecta] = useState(false);
   const [showModal, setShowModal] = useState(false);// Estado para mostrar el modal de puntuacion
   const [showModalRacha, setShowModalRacha] = useState(false);// Estado para mostrar el modal de racha
+  const [showModalRachaPerdida, setShowModalRachaPerdida] = useState(false);// Estado para mostrar el modal de racha
+  
   const [resultadoRespuestas, setResultadoRespuestas] = useState(0);
   const [monedasGanadas, setMonedasGanadas] = useState(0);
   const [expGanada, setExpGanada] = useState(0);
   
 
   const { user } = useAuth();
+
+const userId = user?.uid;
+
 
 
        // Obtén las preguntas de Firestore
@@ -114,7 +122,7 @@ if (preguntas.length === 0) {
       return;
     }
   
-    const userDocRef = doc(db, 'users', user?.uid);
+    const userDocRef = doc(db, 'users', userId);
     const preguntasRespondidasRef = collection(userDocRef, 'Preguntas Respondidas');
   
     try {
@@ -146,7 +154,7 @@ if (preguntas.length === 0) {
       setResultadoRespuestas(resultadoRespuestas + 1); // Incrementar el contador de respuestas correctas
       await marcarPreguntaRespondida(questions[currentQuestion]?.questionId);
       if (currentQuestion < questions.length - 1) {
-        const userDocRef = doc(db, 'users', user?.uid);
+        const userDocRef = doc(db, 'users', userId);
         await updateDoc(userDocRef, {
           Exp: userInfo.Exp + 15,
           Monedas: userInfo.Monedas 
@@ -157,11 +165,15 @@ if (preguntas.length === 0) {
 
       } else {
         
-          const userDocRef = doc(db, 'users', user?.uid);
+          const userDocRef = doc(db, 'users', userId);
           await updateDoc(userDocRef, {
             Monedas: userInfo.Monedas + monedasGanadas + 10
           });
-          
+          // Guardar la fecha actual como la última vez que el usuario hizo el quiz
+  const today = new Date().toDateString();
+  await AsyncStorage.setItem("lastQuizDate", today);
+  console.log('Fecha del último quiz guardada:', today);
+
           setShowModal(true); // Muestra el modal de puntuación
 
         
@@ -173,7 +185,7 @@ if (preguntas.length === 0) {
       await playSound(require('../assets/sound/incorrect-choice.mp3')); // sonido de respuesta incorrecta
 
       setTimeout(async () => {
-        const userDocRef = doc(db, 'users', user?.uid);
+        const userDocRef = doc(db, 'users', userId);
   
         if (userInfo.Vidas > 0) {
           try {
@@ -190,7 +202,10 @@ if (preguntas.length === 0) {
               setCurrentQuestion(currentQuestion + 1);
               setRespuestaSeleccionada(null);
             } else {
-              
+ // Guardar la fecha actual como la última vez que el usuario hizo el quiz
+  const today = new Date().toDateString();
+  await AsyncStorage.setItem("lastQuizDate", today);
+  console.log('Fecha del último quiz guardada:', today);
               setShowModal(true); // Muestra el modal de puntuación
               stopMusic();
                 
@@ -205,6 +220,10 @@ if (preguntas.length === 0) {
           await updateDoc(userDocRef, {
             Monedas: userInfo.Monedas + monedasGanadas,
           })
+
+   const today = new Date().toDateString();
+  await AsyncStorage.setItem("lastQuizDate", today); // guardar la ultima vez que el usuario hizo el quiz
+  console.log('Fecha del último quiz guardada:', today);
           setShowModal(true); // Muestra el modal
           stopMusic();
         }
@@ -221,7 +240,7 @@ if (preguntas.length === 0) {
     }
 
     if (currentQuestion < questions.length - 1) {
-      const userDocRef = doc(db, 'users', user?.uid);
+      const userDocRef = doc(db, 'users', userId);
       try {
         await updateDoc(userDocRef, {
           Monedas: userInfo.Monedas - 50,
@@ -234,7 +253,9 @@ if (preguntas.length === 0) {
       }
     } else {
       Alert.alert('Has completado el quiz.');
-      //manejarRachaDiaria(user.uid);
+      const today = new Date().toDateString();
+      await AsyncStorage.setItem("lastQuizDate", today); // guardar la ultima vez que el usuario hizo el quiz
+      console.log('Fecha del último quiz guardada:', today);
       setShowModal(true); // Muestra el modal
     }
   };
@@ -255,9 +276,6 @@ if (preguntas.length === 0) {
     // Actualizar el estado con las respuestas restantes (correcta + una incorrecta)
     const nuevasRespuestas = [correcta, ...respuestasIncorrectas.slice(0, 1)];
 
-
-    
-
     // Actualizar el estado de las preguntas con las nuevas respuestas
     setQuestions((prevQuestions) => {
       return prevQuestions.map((pregunta) => {
@@ -274,7 +292,7 @@ if (preguntas.length === 0) {
    
 
     // Descontar las monedas
-    const userDocRef = doc(db, 'users', user?.uid);
+    const userDocRef = doc(db, 'users', userId);
     try {
       await updateDoc(userDocRef, {
         Monedas: userInfo.Monedas - 50,
@@ -295,7 +313,7 @@ if (preguntas.length === 0) {
     setShowModal(false);
    stopMusic();
     setTimeout(() => { // Esperar 1 segundo antes de mostrar el otro modal de racha
-      manejarRachaDiaria(user?.uid,setShowModalRacha);
+      manejarRachaDiaria(userId,setShowModalRacha,setShowModalRachaPerdida);
       navigation.navigate('(tabs)')
 
     }, 1000)
@@ -332,12 +350,17 @@ useEffect(() => {
   };
 }, [])
  
+if (!userId) {
+  return;
+}
 
   return (
     
     <SafeAreaView>
  <ModalPuntuacion userInfo={userInfo} expGanada={expGanada} monedasGanadas={monedasGanadas} respuestasCorrectas={resultadoRespuestas} isVisible={showModal} onClose={mostrarModalRacha}/>  
 <ModalRacha userInfo={userInfo} isVisible={showModalRacha} setShowModalRacha={setShowModalRacha}  />
+<ModalRachaPerdida userInfo={userInfo} isVisible={showModalRachaPerdida} setShowModalRachaPerdida={setShowModalRachaPerdida}   />
+     
      <ImageBackground source={require('../assets/images/bg-quiz.png')} resizeMode="cover" style={styles.backgroundImage}>
     <View  className='w-full h-full  flex items-center '>
    

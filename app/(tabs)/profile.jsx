@@ -1,16 +1,14 @@
 import { View, Text, ScrollView, Pressable, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
-  Entypo, 
-  Feather, 
+  Entypo,  
   MaterialCommunityIcons, 
   AntDesign, 
-  FontAwesome, 
   FontAwesome6,
   Ionicons
 } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import useAuth from '../authContext';
+import useAuth from '../../components/authContext/authContext';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../components/firebase/firebaseConfig';
 import { Avatar } from 'react-native-paper';
@@ -95,7 +93,7 @@ export default function Profile() {
               <View className="bg-white p-2 rounded-full">
     <MaterialCommunityIcons name="lightning-bolt-outline" size={26} color="black" />
               </View>
-              <Text className="text-white text-xl font-bold mt-2">{userInfo?.RachaMaxima || 0}</Text>
+              <Text className="text-white text-xl font-bold mt-2">{userInfo?.RachaMaxima }</Text>
               <Text className="text-gray-200 text-sm">Racha Máxima</Text>
             </View>
 

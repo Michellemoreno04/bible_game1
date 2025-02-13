@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, Modal, StyleSheet, Share, SafeAreaView,ImageBackground } from 'react-native';
 import { getFirestore, collection, query, limit, startAfter, getDocs, doc, deleteDoc, orderBy } from 'firebase/firestore';
-import useAuth from '../app/authContext';
+import useAuth from '../components/authContext/authContext';
 import { Entypo } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

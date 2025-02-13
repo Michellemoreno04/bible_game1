@@ -1,13 +1,14 @@
 import { Link } from 'expo-router';
 import React, { useState } from 'react';
-import { View, TextInput, KeyboardAvoidingView, Text, StyleSheet, Pressable, Alert, ScrollView } from 'react-native';
+import { View, TextInput, KeyboardAvoidingView, Text, Platform, Pressable, Alert, ScrollView } from 'react-native';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import {auth,db} from '../components/firebase/firebaseConfig'
 import { useNavigation } from '@react-navigation/native';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { LinearGradient } from 'expo-linear-gradient';
-import { FontAwesome6 } from '@expo/vector-icons';
+import { MaterialIcons,FontAwesome } from '@expo/vector-icons';
+import { SigninComponents } from '../components/signinComponents/signinComponents';
 
 
 
@@ -73,7 +74,7 @@ createUserWithEmailAndPassword(auth, credenciales.email, credenciales.password)
       confirmPassword: '',
     })
 
-    navigate.navigate('(tabs)');
+    navigate.navigate('welcomeScreen');
 
   })
   .catch((error) => {
@@ -121,94 +122,143 @@ const handleFirebaseError = (error) => {
 };
 
   return (
-            <LinearGradient colors={['#ffcc00', '#ff8a00']} style={{ flex: 1 }}>
-    <KeyboardAvoidingView >
-    <ScrollView  >
-    <View className="w-full h-screen flex items-center justify-center p-8 gap-4" >
-      <View>
-        <Text className='text-3xl font-bold color-white text-center '>BibleBrain</Text>
-        <Text className='text-lg font-bold color-white'>Registrate para continuar</Text>
-      </View>
-      <TextInput
-      style={styles.input}
-        className='w-full h-16 border-2 border-white rounded-md p-2 text-white font-bold'
-        placeholder="Nombre"
-        placeholderTextColor="#fff"
-        value={credenciales.name}
-        onChangeText={(text) => handlerOnChange('name', text)}
-        keyboardType="default"
-      />
-      <TextInput
-      style={styles.input}
-        className='w-full h-16 border-2 border-white rounded-md p-2 text-white font-bold'
-        placeholder="correo electronico"
-        placeholderTextColor="#fff"
-        value={credenciales.email}
-        onChangeText={(text) => handlerOnChange('email', text)}
-        keyboardType="email-address"
-      />
-      <TextInput
-      style={styles.input}
-        className='w-full h-16 border-2 border-white rounded-md p-2 text-white font-bold'
-        placeholder="contraseña"
-        placeholderTextColor="#fff"
-        value={credenciales.password}
-        onChangeText={(text) => handlerOnChange('password', text)}
-        secureTextEntry
-      />
-      <TextInput
-      style={styles.input}
-      className='w-full h-16 border-2 border-white rounded-md p-2 text-white font-bold'
-        placeholder="Confirmar contraseña"
-        placeholderTextColor='#fff'
-        value={credenciales.confirmPassword}
-        onChangeText={(text) => handlerOnChange('confirmPassword', text)}
-        secureTextEntry
-      />
-      {error ? <Text >{error}</Text> : null}
-      <Pressable
-      style={styles.input}
-      onPress={handleSignUp}
-      className='w-full h-16 flex items-center justify-center  rounded-md bg-blue-500 p-2 mt-3'>
-        <Text className='color-white'>Registrate</Text>
-      </Pressable>
+    <LinearGradient 
+    colors={['#1D2671', '#C33764']} // Mismo gradiente que en Login
+    style={{ flex: 1 }}
+  >
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+    >
+      <ScrollView 
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View className="flex-1 px-8 justify-center pb-16">
+          {/* Sección de Logo y Título */}
+          <View className="items-center mb-12">
+            <Text className="text-5xl font-bold text-white mb-2 shadow-lg">
+              BibleBrain
+            </Text>
+            <Text className="text-lg text-gray-200">
+              Registrate para continuar
+            </Text>
+          </View>
 
-   <View className='w-full flex flex-row items-center justify-center gap-4'>
-   <Pressable className='w-full-white p-5 bg-white rounded-full'>
-                <AntDesign name="google" size={24} color="black" />
-            </Pressable>
-   <Pressable className='w-full-white p-5 bg-white rounded-full'>
-   <FontAwesome6 name="facebook" size={24} color="black" />
-            </Pressable>
-   <Pressable className='w-full-white p-5 bg-white rounded-full'>
-                <AntDesign name="apple1" size={24} color="black" />
-            </Pressable>
-   </View>
+          {/* Sección de Formulario */}
+          <View className="space-y-6">
+            {/* Input de Nombre */}
+            <View className="bg-white/10 rounded-xl p-3 mb-3 flex-row items-center">
+              <MaterialIcons 
+                name="person" 
+                size={24} 
+                color="#FFF" 
+                style={{ marginRight: 10 }} 
+              />
+              <TextInput
+                placeholder="Nombre"
+                placeholderTextColor="rgba(255,255,255,0.7)"
+                className="flex-1 text-white text-lg"
+                value={credenciales.name}
+                onChangeText={(text) => handlerOnChange('name', text)}
+              />
+            </View>
 
-      <Text className='color-white' >
-        Ya tienes una cuenta?{' '}
-        <Link href="/login">
-        <Text className='text-blue-500 font-bold' >
-          iniciar seccion
-        </Text> 
-        </Link>
-      </Text>
-           
-    </View>
-    </ScrollView>
+            {/* Input de Correo electrónico */}
+            <View className="bg-white/10 rounded-xl p-3 mb-3 flex-row items-center">
+              <MaterialIcons 
+                name="email" 
+                size={24} 
+                color="#FFF" 
+                style={{ marginRight: 10 }} 
+              />
+              <TextInput
+                placeholder="Correo electrónico"
+                placeholderTextColor="rgba(255,255,255,0.7)"
+                className="flex-1 text-white text-lg"
+                autoCapitalize="none"
+                keyboardType="email-address"
+                value={credenciales.email}
+                onChangeText={(text) => handlerOnChange('email', text)}
+              />
+            </View>
+
+            {/* Input de Contraseña */}
+            <View className="bg-white/10 rounded-xl p-3 mb-3 flex-row items-center">
+              <MaterialIcons 
+                name="lock" 
+                size={24} 
+                color="#FFF" 
+                style={{ marginRight: 10 }} 
+              />
+              <TextInput
+                placeholder="Contraseña"
+                placeholderTextColor="rgba(255,255,255,0.7)"
+                className="flex-1 text-white text-lg"
+                secureTextEntry
+                value={credenciales.password}
+                onChangeText={(text) => handlerOnChange('password', text)}
+              />
+            </View>
+
+            {/* Input de Confirmar Contraseña */}
+            <View className="bg-white/10 rounded-xl p-3 mb-3 flex-row items-center">
+              <MaterialIcons 
+                name="lock" 
+                size={24} 
+                color="#FFF" 
+                style={{ marginRight: 10 }} 
+              />
+              <TextInput
+                placeholder="Confirmar contraseña"
+                placeholderTextColor="rgba(255,255,255,0.7)"
+                className="flex-1 text-white text-lg"
+                secureTextEntry
+                value={credenciales.confirmPassword}
+                onChangeText={(text) => handlerOnChange('confirmPassword', text)}
+              />
+            </View>
+
+            {/* Mensaje de error (si existe) */}
+            {error ? (
+              <Text className="text-red-500 text-center">{error}</Text>
+            ) : null}
+
+            {/* Botón para registrarse */}
+            <Pressable
+              onPress={handleSignUp}
+              className="bg-amber-500 rounded-xl p-4 items-center justify-center shadow-lg active:opacity-80"
+              android_ripple={{ color: '#ffffff50' }}
+            >
+              <Text className="text-white text-xl font-bold">Registrate</Text>
+            </Pressable>
+
+            {/* Sección de Redes Sociales */}
+            <View className="py-6">
+              <View className="flex-row items-center mb-6">
+                <View className="flex-1 h-px bg-white/30" />
+                <Text className="px-4 text-white/80 text-sm">Continúa con</Text>
+                <View className="flex-1 h-px bg-white/30" />
+              </View>
+             <SigninComponents />
+            </View>
+
+            {/* Enlace para ir a Login */}
+            <View className="flex-row justify-center pt-4">
+              <Text className="text-white/90">Ya tienes una cuenta? </Text>
+              <Link href="/login">
+                <Text className="text-amber-400 font-semibold underline">
+                  Inicia sesión
+                </Text>
+              </Link>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
-    </LinearGradient>
-  );
+  </LinearGradient>
+);
 };
 
-const styles = StyleSheet.create({
-  input: {
-    color: '#fff',
-    borderRadius: 30,
-   
-    padding: 10,
-  },
-});
-
-
-export default SignUp;
+export default SignUp
