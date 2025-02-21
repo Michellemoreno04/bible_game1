@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-
+import { Icon } from '@rneui/base';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -25,7 +25,7 @@ export default function TabLayout() {
         options={{
           title: 'Home',
         headerShown: false,
-        tabBarIcon: ({ color }) => <MaterialCommunityIcons name="home" color={color} size={26}
+        tabBarIcon: ({ color }) => <Icon name="day-haze" type="fontisto" color={color} size={26}
         
         />,
 

@@ -1,19 +1,20 @@
-import { Text, View, StyleSheet, SafeAreaView, ScrollView, Alert, ActivityIndicator,Platform,StatusBar } from 'react-native';
+import { Text, View, StyleSheet, SafeAreaView, ScrollView, Alert, ActivityIndicator,Image } from 'react-native';
 import '../../global.css';
 import {FontAwesome5, MaterialCommunityIcons} from '@expo/vector-icons';
 import useAuth from '../../components/authContext/authContext';
 import React, { useEffect, useState} from 'react';
 import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import {db } from '@/components/firebase/firebaseConfig';
-import { Avatar } from 'react-native-paper';
+
 import { niveles } from '@/components/Niveles/niveles';
 import VersiculosDiarios from '@/components/VersiculoDiario/versiculoDiario';
 import NivelModal from '@/components/Modales/modalNivel';
 import { Link, useNavigation } from 'expo-router';
-import ExploraComponents from '@/components/exploraComponents/exploraComponents';
 import ShareButton from '@/components/compartir/share';
 import { LinearGradient } from 'expo-linear-gradient';
-import {ModalRachaPerdida} from '@/components/Modales/rachaPerdida';
+import { Avatar } from '@rneui/base';
+import ExploraComponent from '@/components/exploraComponents/exploraComponent';
+import GuardadosComponents from '@/components/exploraComponents/guardadosComponents';
 
 export default function AppComponent() {
   const { user } = useAuth();
@@ -22,7 +23,6 @@ export default function AppComponent() {
   const [showNivelModal, setShowNivelModal] = useState(false);
   const [nivelAnterior, setNivelAnterior] = useState(null);
   const [isLoading, setIsLoading] = useState(true); // Nuevo estado de carga
-  const [showModalRacha, setShowModalRacha] = useState(false);// Estado para mostrar el modal de racha
 
   const userId = user?.uid;
  // Función para verificar si el usuario está autenticado
@@ -56,7 +56,7 @@ export default function AppComponent() {
     return () => unsubscribe();
   }, [userId]);
 
-
+// Función para guardar la insignia
   useEffect(() => {
     const guardarInsignia = async () => {
         if (!userAuthenticated.Exp) return;
@@ -111,14 +111,21 @@ export default function AppComponent() {
           <View style={styles.headerContainer}>
   {/* Contenedor Izquierdo: Avatar e Información */}
   <View style={styles.leftContainer}>
-    <Avatar.Image size={50} source={require('../../assets/images/Loader.png')} />
+    <Avatar
+    size={60}
+    rounded
+     source={require('../../assets/images/Loader.png')} />
     <View style={styles.userInfo}>
       <Text style={styles.greeting}>
         {`Hola!, ${userAuthenticated?.Name || 'Anónimo'}`}
       </Text>
+      <View  className=" flex-row items-center">
+
       <Text style={styles.level} className="bg-blue-100">
         {`Nivel ${niveles(userAuthenticated?.Exp || 0).nivel} -> ${niveles(userAuthenticated?.Exp || 0).insignia}`}
       </Text>
+      <MaterialCommunityIcons name="medal" size={20} color="#f59e0b"/>
+                            </View>
     </View>
   </View>
 
@@ -131,7 +138,8 @@ export default function AppComponent() {
 
 
             <VersiculosDiarios />
-            <ExploraComponents />
+            <ExploraComponent />
+            <GuardadosComponents />
             <ShareButton />
             
           </View>
@@ -163,6 +171,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
    
   },
+  
   leftContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -171,7 +180,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   greeting: {
-    fontSize: 24,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   level: {
@@ -179,11 +188,12 @@ const styles = StyleSheet.create({
     color: '#555',
     padding: 5,
     borderRadius: 5,
+    
   },
 
   rachaContainer: {
     position: 'relative',
-    bottom: 12,
+    bottom: 10,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFF3E0',

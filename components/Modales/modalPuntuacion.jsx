@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import Modal from 'react-native-modal';
 import LottieView from 'lottie-react-native';
 import { FontAwesome5, FontAwesome6 } from '@expo/vector-icons';
-import { ProgressBar } from 'react-native-paper';
 import { Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSound } from '../soundFunctions/soundFunction';
@@ -27,21 +26,15 @@ export function ModalPuntuacion({ isVisible, onClose, respuestasCorrectas, expGa
          <View style={styles.contentContainer}>
            <Text style={styles.subtitle}>🎉 Nueva recompensa 🎉</Text>
            
-           <View style={styles.titleContainer}>
-             <LinearGradient
-               colors={['#ff6b6b', '#ff8e53']}
-               style={styles.titleBackground}
-             />
-             <Text style={styles.title}>Platino</Text>
-           </View>
+         
  
            <Text style={styles.streakText}>🔥 Racha actual: {userInfo.Racha} días consecutivos</Text>
  
            <View style={styles.animationContainer}>
              <LottieView
-               source={require('../../assets/lottieFiles/insigniasNivel/award.json')}
+               source={require('../../assets/lottieFiles/treasureCoins.json')}
                autoPlay
-               loop
+               loop={false}
                style={styles.animation}
              />
              <Text style={styles.congratsText}>¡Felicidades!</Text>
@@ -51,7 +44,7 @@ export function ModalPuntuacion({ isVisible, onClose, respuestasCorrectas, expGa
            <View style={styles.rewardsContainer}>
              <View style={styles.rewardItem}>
                <LinearGradient
-                 colors={['#ffd700', '#ffec8b']}
+                 colors={['#ffd700', '#ffbf00']}
                  style={[styles.iconContainer, styles.coinBackground]}
                >
                  <FontAwesome5 name="coins" size={32} color="#a88600" />

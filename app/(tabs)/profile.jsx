@@ -1,33 +1,44 @@
-import { View, Text, ScrollView, Pressable, Alert, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  Alert,
+  StyleSheet,
+  Linking,
+  Share,
+  Image
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  Entypo,  
-  MaterialCommunityIcons, 
-  AntDesign, 
+import { LinearGradient } from 'expo-linear-gradient';
+import {
+  MaterialCommunityIcons,
+  Feather,
+  AntDesign,
   FontAwesome6,
-  Ionicons
+  FontAwesome5,
+  MaterialIcons
 } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import useAuth from '../../components/authContext/authContext';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../components/firebase/firebaseConfig';
-import { Avatar } from 'react-native-paper';
-import { LinearGradient } from 'expo-linear-gradient';
 import { niveles } from '@/components/Niveles/niveles';
-import { useNavigation } from '@react-navigation/native';
+import { Avatar } from '@rneui/themed';
+import { Icon } from '@rneui/themed';
 
 export default function Profile() {
   const navigation = useNavigation();
-  const [userInfo, setUserInfo] = useState({});
   const { user, signOut } = useAuth();
+  const [userInfo, setUserInfo] = useState({});
+ 
 
 
-
-
+  // Escucha de cambios en la información del usuario en Firebase
   useEffect(() => {
     if (!user) return;
-    const userRef = doc(db, 'users', user?.uid);
-    
+    const userRef = doc(db, 'users', user.uid);
     const unsubscribe = onSnapshot(userRef, (doc) => {
       setUserInfo(doc.data());
     });
@@ -35,172 +46,317 @@ export default function Profile() {
   }, [user]);
 
 
-  const salir = () => {
-    Alert.alert('Salir', '¿Está seguro de que desea salir?', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Salir',
-        onPress: async () => {
-          await signOut();
-          navigation.replace('signUpScreen');
-        },
-      },
-    ]);
-  };
-
-
   return (
-    <ScrollView className='bg-gray-100'>
-      <SafeAreaView className="flex-1">
-        {/* Header con botón de salida */}
-        <View className="flex-row justify-between items-center p-4 ">
-          <View className='flex-row items-center '>
-          <Ionicons name="person-circle" size={35} color="black" />
-          <Text className="text-2xl font-bold text-gray-800 ml-2 ">Perfil</Text>
-          </View>
-          <Pressable
-            onPress={salir}
-            className="flex-row items-center bg-red-100 p-2 rounded-lg"
-          >
-            <Entypo name="log-out" size={20} color="red" />
-            <Text className="text-red-600 ml-2 font-bold">Salir</Text>
+    <SafeAreaView style={styles.safeAreaView}>
+      {/* Encabezado personalizado */}
+      <View className='flex-row items-center justify-between py-4 px-4'>
+        <Text className='text-2xl font-bold'>Perfil</Text>
+          <Pressable onPress={() => navigation.navigate('menuScreen')}>
+          <Icon 
+            name="menu"
+            type="ionicon"
+            size={30}
+            color="black"
+          />
           </Pressable>
-        </View>
-
-        {/* Tarjeta de perfil con gradiente */}
-        <LinearGradient
-          colors={['blue', '#6E8BFA']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.card} 
-        >
-          <View className="items-center">
-            <Avatar.Image
-              size={100}
-              source={userInfo?.photoURL ? { uri: userInfo.photoURL } : require('../../assets/images/icon.png')}
-              className="bg-white"
-            />
-            <Text className="text-2xl font-bold text-white mt-4">{userInfo?.Name || 'Usuario'}</Text>
-            <View className="flex-row items-center mt-1">
-              <MaterialCommunityIcons name="certificate" size={16} color="#fbbf24" />
-              <Text className="text-gray-200 ml-1">@{userInfo?.username || 'usuario123'}</Text>
-            </View>
-          </View>
-
-          {/* Estadísticas rápidas */}
-          <View className="flex-row justify-between mt-6">
-            <View className="items-center">
-              <View className="bg-white p-2 rounded-full">
-    <MaterialCommunityIcons name="lightning-bolt-outline" size={26} color="black" />
-              </View>
-              <Text className="text-white text-xl font-bold mt-2">{userInfo?.RachaMaxima }</Text>
-              <Text className="text-gray-200 text-sm">Racha Máxima</Text>
-            </View>
-
-            <View className="items-center">
-              <View className="bg-white p-2 rounded-full">
-                <AntDesign name="linechart" size={24} color="#4f46e5" />
-              </View>
-              <Text className="text-white text-xl font-bold mt-2">Nivel {userInfo?.Nivel || 1}</Text>
-              <Text className="text-gray-200 text-sm">{niveles(userInfo?.Exp).insignia}</Text>
-            </View>
-
-            <View className="items-center">
-              <View className="bg-white p-2 rounded-full">
-              <FontAwesome6 name="coins" size={24} color="gold" />         
-              </View>
-              <Text className="text-white text-xl font-bold mt-2">{userInfo?.Monedas || 0}</Text>
-              <Text className="text-gray-200 text-sm">Monedas</Text>
-            </View>
-          </View>
-        </LinearGradient>
-
-      
-
-        {/* Sección de insignias */}
-        <View className="mx-4 mt-6">
-          <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-xl font-bold text-gray-800">Logros</Text>
-            <MaterialCommunityIcons name="medal" size={24} color="#4f46e5" />
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-  {userInfo?.Insignias?.length > 0 ? (
-    userInfo.Insignias.map((insignia, index) => (
-      <View 
-        key={insignia.id || index} 
-        style={styles.insigniaContainer}
-      >
-        <Entypo name="trophy" size={24} color="gold" />
-        <Text style={styles.insigniaText}>
-          {insignia}
-        </Text>
       </View>
-    ))
-  ) : (
-    <Text style={styles.noInsigniasText}>Aún no has conseguido ninguna insignia.</Text>
-  )}
-</ScrollView>
-        </View>
-<View className="mx-4 mt-6">
-  <Text className='text-xl font-bold text-gray-800'>Descripcion</Text>
-  <Text className='text-xl  text-gray-800'>
-    Lorem, ipsum dolor sit amet consectetur adipisicing elit. Officiis quas nostrum odit ea libero magnam! Provident aperiam officiis dolorem praesentium aliquid, unde ratione natus cumque. Beatae rem omnis nulla repudiandae?
-    </Text>
-</View>
-       
-        
+
+    
+      
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Tarjeta de Perfil con fondo degradado */}
+          <View style={styles.profileCard}>
+            <LinearGradient
+              colors={['#6366f1', '#4338ca']}
+              style={styles.gradient}
+            >
+              <View style={styles.profileHeader}>
+                <View style={styles.avatarContainer}>
+                  <Avatar
+                    style={[styles.avatar, { width: 100, height: 100 }]}
+                    source={
+                      userInfo?.FotoPerfil
+                        ? { uri: userInfo.FotoPerfil }
+                        : require('../../assets/images/icon.png')
+                    }
+                  />
+                 
+                </View>
+                <Text className='text-2xl font-bold text-white'>
+                  {userInfo?.Name || 'Usuario'}
+                </Text>
+                <Text className='text-lg text-white'>
+                  @{userInfo?.username || 'usuario123'}
+                </Text>
+              </View>
+
+              {/* Sección de Estadísticas */}
+              <View style={styles.statsContainer}>
+                <StatItem
+                  icon={
+                    <MaterialCommunityIcons
+                      name="lightning-bolt"
+                      size={24}
+                      color="#f59e0b"
+                    />
+                  }
+                  value={userInfo?.RachaMaxima || 0}
+                  label="Racha Máx"
+                />
+                <StatItem
+                  icon={
+                    <AntDesign name="linechart" size={24} color="#3b82f6" />
+                  }
+                  value={`Nivel ${userInfo?.Nivel || 1}`}
+                  label={niveles(userInfo?.Exp)?.insignia}
+                  progress={niveles(userInfo?.Exp)?.progreso}
+                />
+                <StatItem
+                  icon={
+                    <FontAwesome6 name="coins" size={24} color="#eab308" />
+                  }
+                  value={userInfo?.Monedas || 0}
+                  label="Monedas"
+                />
+              </View>
+            </LinearGradient>
+          </View>
+
+          {/* Sección de Insignias Destacadas */}
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Insignias Destacadas</Text>
+              <MaterialCommunityIcons
+                name="medal-outline"
+                size={24}
+                color="#4f46e5"
+              />
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.badgesScroll}
+            >
+              {userInfo?.Insignias?.length > 0 ? (
+                userInfo.Insignias.map((insignias, index) => (
+                  <View key={index} style={styles.badgeCard}>
+                    <MaterialCommunityIcons
+                      name="medal"
+                      size={32}
+                      color="#f59e0b"
+                    />
+                    <Text style={styles.badgeText}>{insignias}</Text>
+                  </View>
+                ))
+              ) : (
+                <View style={styles.emptyBadgeCard}>
+                  <Text style={styles.emptyBadgeText}>
+                    Completa más actividades para ganar insignias 🏆
+                  </Text>
+                </View>
+              )}
+            </ScrollView>
+          </View>
+
+          {/* Sección Acerca de */}
+          <View style={styles.aboutCard}>
+            <Text style={styles.aboutTitle}>Descripcion</Text>
+            <View style={styles.aboutContent}>
+              <Text style={styles.aboutText}>
+                {userInfo?.Description ||
+                  '¡Hola! Soy un apasionado del aprendizaje continuo y me encanta compartir conocimiento.'}
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
       </SafeAreaView>
-    </ScrollView>
+    
   );
 }
 
+// Componente para cada estadística del perfil
+const StatItem = ({ icon, value, label}) => (
+  <View style={styles.statItem}>
+    <View style={styles.statIcon}>{icon}</View>
+    <Text style={styles.statValue}>{value}</Text>
+    <Text style={styles.statLabel}>{label}</Text>
+    
+  </View>
+);
+
 const styles = StyleSheet.create({
-  card: {
-    height: 300,
-    padding: 16,
-    borderRadius: 8,
-    marginHorizontal: 20,
-  },
-  insignia: {
-    alignItems: 'center',
-    marginRight: 10,
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 8,
+  menu: {
+    marginTop: 40,
+    borderRadius: 12,
+    elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
-    minWidth: 100,
   },
-    insigniaContainer: {
-      borderRadius: 20,
-       paddingVertical: 8,
-      paddingHorizontal: 20,
-      marginHorizontal: 4,
-      justifyContent: 'center',
-      alignItems: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 2,
-    backgroundColor: 'blue',
-    
-    },
-   
-    insigniaText: {
-      color: '#fff',
-      fontSize: 13,
-      fontWeight: '700',
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-      textShadowColor: 'yellow',
-      textShadowOffset: { width: 0.5, height: 0.5 },
-      textShadowRadius: 1,
-      
-    },
-   
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    width: '100%',
+  },
+  menuIcon: {
+    marginRight: 12,
+    color: '#64748b',
+  },
+  menuText: {
+    fontSize: 16,
+    color: '#334155',
+  },
+  safeAreaView: {
+    flex: 1,
+  },
 
+  /* Estilos para la tarjeta de perfil */
+  profileCard: {
+    margin: 16,
+    borderRadius: 20,
+    elevation: 5,
+    overflow: 'hidden',
+  },
+  gradient: {
+    padding: 24,
+  },
+  profileHeader: {
+    alignItems: 'center',
+  },
+  
+  avatar: {
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'white',
+    borderRadius: 50,
+  },
+  editIcon: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#4f46e5',
+    borderRadius: 12,
+    padding: 5,
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+
+  /* Estilos para la sección de estadísticas */
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 24,
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statIcon: {
+    backgroundColor: 'white',
+    padding: 8,
+    borderRadius: 25,
+    elevation: 2,
+  },
+  statValue: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 8,
+  },
+  statLabel: {
+    color: '#e5e7eb',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  progressContainer: {
+    height: 4,
+    width: 60,
+    backgroundColor: '#e0e7ff',
+    borderRadius: 2,
+    marginTop: 4,
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#4f46e5',
+    borderRadius: 2,
+  },
+  progressText: {
+    color: '#e5e7eb',
+    fontSize: 10,
+    marginTop: 2,
+  },
+  /* Estilos para la sección de insignias */
+  sectionContainer: {
+    marginHorizontal: 16,
+    marginTop: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  badgesScroll: {
+    paddingLeft: 4,
+  },
+  badgeCard: {
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    minWidth: 100,
+    marginRight: 12,
+    elevation: 2,
+  },
+  badgeText: {
+    marginTop: 8,
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+    color: '#333',
+  },
+  emptyBadgeCard: {
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#e0f2fe',
+    elevation: 2,
+  },
+  emptyBadgeText: {
+    fontSize: 14,
+    color: '#0369a1',
+  },
+  /* Estilos para la sección "Acerca de" */
+  aboutCard: {
+    margin: 16,
+    borderRadius: 12,
+    elevation: 3,
+    backgroundColor: 'white',
+  },
+  aboutTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  aboutContent: {
+    padding: 16,
+  },
+  aboutText: {
+    fontSize: 14,
+    color: '#555',
+    lineHeight: 20,
+  },
 });

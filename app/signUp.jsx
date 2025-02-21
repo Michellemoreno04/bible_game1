@@ -1,7 +1,6 @@
 import { Link } from 'expo-router';
 import React, { useState } from 'react';
-import { View, TextInput, KeyboardAvoidingView, Text, Platform, Pressable, Alert, ScrollView } from 'react-native';
-import AntDesign from '@expo/vector-icons/AntDesign';
+import { View, TextInput, KeyboardAvoidingView, Text, Platform, Pressable, Alert, ScrollView,StyleSheet, Image, Linking } from 'react-native';
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import {auth,db} from '../components/firebase/firebaseConfig'
 import { useNavigation } from '@react-navigation/native';
@@ -9,7 +8,7 @@ import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons,FontAwesome } from '@expo/vector-icons';
 import { SigninComponents } from '../components/signinComponents/signinComponents';
-
+import * as ImagePicker from 'expo-image-picker';
 
 
 
@@ -29,6 +28,8 @@ const SignUp = () => {
   const [nivel,setNivel] = useState(1);
   const [racha, setRacha] = useState(0);
   const [rachaMaxima, setRachaMaxima] = useState(0);
+  const [avatarType, setAvatarType] = useState(null);
+  const [imageUri, setImageUri] = useState(null);
 
   const hoy = new Date(); 
     hoy.setHours(0, 0, 0, 0); // Establecer solo la fecha (sin hora)
@@ -57,6 +58,7 @@ createUserWithEmailAndPassword(auth, credenciales.email, credenciales.password)
         Racha: racha,
         RachaMaxima: rachaMaxima,
         modalRachaShow: ayer.toISOString(),
+        FotoPerfil: imageUri
       });
     } catch (error) {
   
@@ -121,6 +123,51 @@ const handleFirebaseError = (error) => {
   Alert.alert("Error de inicio de sesión", errorMessage, [{ text: "Entendido" }]);
 };
 
+// Función para manejar la selección de imagen
+const pickImage = async () => {
+  // Verificar y solicitar permisos
+  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+  if (status !== 'granted') {
+    if (status === 'denied') {
+      // Mostrar alerta con opción para ir a configuración
+      Alert.alert(
+        'Permiso requerido',
+        'Para seleccionar una imagen, necesitas habilitar el acceso a la galería en la configuración de la aplicación.',
+        [
+          {
+            text: 'Cancelar',
+            style: 'cancel',
+          },
+          {
+            text: 'Abrir Configuración',
+            onPress: () => Linking.openSettings(),
+          },
+        ]
+      );
+    } else {
+      Alert.alert(
+        'Permiso requerido',
+        'Necesitas permitir el acceso a la galería para seleccionar una imagen.'
+      );
+    }
+    return;
+  }
+
+  // Continuar con la selección de imagen si el permiso está concedido
+  let result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 1,
+  });
+
+  if (!result.canceled) {
+    setImageUri(result.assets[0].uri);
+    setAvatarType(null);
+  }
+};
+
   return (
     <LinearGradient 
     colors={['#1D2671', '#C33764']} // Mismo gradiente que en Login
@@ -145,11 +192,24 @@ const handleFirebaseError = (error) => {
               Registrate para continuar
             </Text>
           </View>
+{/* Selecion de imagen de perfil */}
+          <Pressable
+                  onPress={pickImage}
+                  className={`w-28 h-28 self-center mb-5 rounded-full bg-white/10 items-center justify-center border-2 ${
+                    imageUri || avatarType ? 'border-amber-500' : 'border-transparent'
+                  }`}
+                >
+                  {imageUri ? (
+                    <Image source={{ uri: imageUri }} className="w-full h-full rounded-full" />
+                  ) : (
+                    <MaterialIcons name="add-a-photo" size={28} color="#FFF" />
+                  )}
+                </Pressable>
 
           {/* Sección de Formulario */}
           <View className="space-y-6">
             {/* Input de Nombre */}
-            <View className="bg-white/10 rounded-xl p-3 mb-3 flex-row items-center">
+            <View className="bg-white/10 rounded-xl p-3 mb-3 flex-row items-center ">
               <MaterialIcons 
                 name="person" 
                 size={24} 
@@ -159,7 +219,7 @@ const handleFirebaseError = (error) => {
               <TextInput
                 placeholder="Nombre"
                 placeholderTextColor="rgba(255,255,255,0.7)"
-                className="flex-1 text-white text-lg"
+                className="flex-1 text-white text-lg font-size-16 " 
                 value={credenciales.name}
                 onChangeText={(text) => handlerOnChange('name', text)}
               />
@@ -176,7 +236,7 @@ const handleFirebaseError = (error) => {
               <TextInput
                 placeholder="Correo electrónico"
                 placeholderTextColor="rgba(255,255,255,0.7)"
-                className="flex-1 text-white text-lg"
+                className="flex-1 text-white text-lg  "
                 autoCapitalize="none"
                 keyboardType="email-address"
                 value={credenciales.email}
@@ -260,5 +320,18 @@ const handleFirebaseError = (error) => {
   </LinearGradient>
 );
 };
+
+const styles = StyleSheet.create({
+  blur: {
+   width: 100,
+   height: 100,
+   flexDirection: 'row',
+   alignItems: 'center',
+   justifyContent: 'center',
+   borderRadius: 50,
+   overflow: 'hidden',
+   marginBottom: 20
+  },
+});
 
 export default SignUp

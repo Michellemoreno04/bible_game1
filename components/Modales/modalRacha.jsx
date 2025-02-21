@@ -211,6 +211,7 @@ useEffect(() => {
       paddingVertical: 15,
       paddingHorizontal: 40,
       alignItems: 'center',
+      borderRadius: 30,
     },
     closeButtonText: {
       color: 'white',

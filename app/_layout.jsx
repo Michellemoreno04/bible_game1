@@ -9,15 +9,14 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
-import { useColorScheme } from "@/hooks/useColorScheme";
 import { AuthProvider } from "../components/authContext/authContext";
-import { PaperProvider } from "react-native-paper";
+
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
@@ -39,19 +38,19 @@ export default function RootLayout() {
       primary: "blue",
       secondary: "yellow",
     },
-    titleLarge: {
-      fontFamily: "Roboto-Medium",
-      fontWeight: "500",
-      fontSize: 20,
-    },
+    
+      titleLarge: {
+        fontFamily: DefaultTheme.fonts.medium.fontFamily,
+        fontWeight: 'bold',
+        variant: 'bold',
+      },
+    
   };
 
   return (
-    <PaperProvider theme={theme}>
+    
       <AuthProvider>
-        <ThemeProvider
-          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        >
+       
           <Stack screenOptions={{ headerShown: true }}>
             <Stack.Screen
               name="(tabs)"
@@ -59,7 +58,6 @@ export default function RootLayout() {
             />
             {/*gestureEnabled: false desactiva el deslizar*/}
             {/*<Stack.Screen name="index" options={{ headerShown: false }} />*/}
-            <Stack.Screen name="app" options={{ headerShown: false }} />
             <Stack.Screen
               name="login"
               options={{
@@ -123,11 +121,30 @@ export default function RootLayout() {
                 
               }}
             />
+            <Stack.Screen
+              name="menuScreen"
+              options={{
+                headerShown: false,
+                headerBackTitle: "volver",
+                presentation: "modal",
+                
+              }}
+            />
+            <Stack.Screen
+              name="editProfile"
+              options={{
+                headerShown: false,
+                headerBackTitle: "volver",
+                presentation: "modal",
+                
+                
+              }}
+            />
             <Stack.Screen name="+not-found" />
           </Stack>
           <StatusBar style="auto" />
-        </ThemeProvider>
+        
       </AuthProvider>
-    </PaperProvider>
+   
   );
 }

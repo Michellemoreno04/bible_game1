@@ -90,6 +90,7 @@ const handleReading = async () => {
     await AsyncStorage.setItem("lastReadingDate", fechaActual); // guardar la ultima vez que el usuario hizo el quiz
      console.log('last reading date saved:', today);
      Alert.alert('Guardado', 'La lectura se ha guardado con éxito.');
+     setIsSpeaking(false);
     navigation.navigate('(tabs)');
     setIsChecked(false); // Resetear checkbox
   } catch (error) {

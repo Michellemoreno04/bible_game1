@@ -66,6 +66,9 @@ if (coins >= coinsRequired) {
         <Text style={styles.highlightedText}>
           ¡Oh no! Has perdido tu racha.
         </Text>
+        <Text className="text-gray-600 text-center">
+          No te desanimes, lo importante es seguir aprendiendo y reforsando tus conocimientos biblicos.
+        </Text>
         {/* Mensaje motivador y que invita a pagar monedas para mantener la racha */}
         <Text style={styles.motivationalText}>
           Pero puedes pagar{' '}
