@@ -1,18 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ScrollView, TouchableOpacity, View, Text, StyleSheet, Modal,Pressable } from 'react-native';
+import { ScrollView, TouchableOpacity, View, Text, StyleSheet, Modal,Pressable, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import  useAuth  from '../authContext/authContext';
+import { db } from '../../components/firebase/firebaseConfig';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
 const ExploraComponent = () => {
+  const { user } = useAuth();
+  const userId = user?.uid;
+
   const navigation = useNavigation();
   const [hasDoneQuizToday, setHasDoneQuizToday] = useState(false);
   const [hasReadTheDailyVerse, setHasReadTheDailyVerse] = useState(false);
   const [showFullScreen, setShowFullScreen] = useState(false);
   const animationRef = useRef(null);
 
-
+ 
 
  // Verificar si el usuario ha hecho el quiz hoy
  useEffect(() => {
@@ -95,7 +101,18 @@ const ExploraComponent = () => {
   const handlePress = (screenName) => {
     navigation.navigate(screenName);
   };
-const handleAnimationPress = () => {
+const handleAnimationPress = async () => {
+
+ const userRef = doc(db, 'users', userId);
+ const userDoc = await getDoc(userRef);
+  const monedas = userDoc.data()?.Monedas || 0;
+
+  if (monedas < 100) {
+    Alert.alert('No tienes suficientes monedas para jugar el quiz.');
+    return;
+  }
+  await updateDoc(userRef, { Monedas: monedas - 100 });
+      
       setShowFullScreen(true);
     };
   
@@ -109,7 +126,7 @@ const handleAnimationPress = () => {
   return (
     <View >
     <View className="w-full flex justify-start mt-5">
-              <Text className="text-3xl font-bold">Explora</Text>
+              <Text className="text-3xl text-white font-bold">Explora</Text>
             </View>
     <ScrollView 
       horizontal
@@ -135,7 +152,7 @@ const handleAnimationPress = () => {
               <IconComponent
                 name={item.icon}
                 size={32}
-                color="#4A6187"
+                color="skyblue"
               />
             </View>
             <Text style={styles.text}>{item.name}</Text>
@@ -203,14 +220,23 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 20,
-    backgroundColor: '#E8EDF7',
+   //backgroundColor: '#E8EDF4',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'skyblue',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    
   },
   text: {
     fontSize: 14,
-    color: '#2C3A4B',
+    color: 'white',
     fontWeight: '500',
     textAlign: 'center',
     lineHeight: 18,
@@ -224,13 +250,13 @@ const styles = StyleSheet.create({
       
     },
     notificationLottie: {
-        width: 40,
-        height: 40,
+        width: 30,
+        height: 30,
         borderRadius: 50,
         overflow: "hidden",
         position: "absolute",
-        right: -10,
-        bottom: 70,
+        right: 0,
+        bottom: 75,
       },
       modalContainer: {
         position: "absolute",

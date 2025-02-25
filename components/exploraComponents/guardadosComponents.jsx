@@ -1,164 +1,116 @@
 import {
-    Text,
-    View,
-    StyleSheet,
-    Modal,
-    TouchableOpacity,
-    ScrollView,
-  } from "react-native";
-  import {
-    AntDesign,
-    FontAwesome5,
-    Ionicons,
-  } from "@expo/vector-icons";
-  import React, {useEffect, useState, useRef } from "react";
-  import { useNavigation } from "expo-router";
-  import LottieView from "lottie-react-native";
-  import AsyncStorage from "@react-native-async-storage/async-storage";
+  Text,
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Dimensions,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { AntDesign, FontAwesome5 } from "@expo/vector-icons";
+import { useNavigation } from "expo-router";
 
+export default function GuardadosComponents() {
+  const navigation = useNavigation();
+  const { width } = Dimensions.get("window");
+  const cardWidth = width * 0.43;
 
-  
-  export default function GuardadosComponents() {
-    const navigation = useNavigation();
-
-
-
-  
-    return (    
-          <View  >
-            <Text className="text-2xl font-bold text-black">
-              Guardados
-            </Text>
-          
-        <View className="w-full mt-4 flex flex-row  ">
-                    
-              <TouchableOpacity
-                style={styles.verciculos}
-                //className="w-52 h-32 bg-orange-500 rounded-xl p-4 flex justify-between"
-                onPress={() => navigation.navigate("versiculosFavoritos")}
-              >
-                <View className="flex flex-row justify-between">
-                  <FontAwesome5 name="book" size={28} color="white" />
-                  <AntDesign name="arrowright" size={24} color="black" />
-                </View>
-                <Text className="text-white font-bold">Versículos Guardados</Text>
-              </TouchableOpacity>
+  return (
+    <View >
+      <Text style={styles.title}>Guardados</Text>
       
-              
-                <TouchableOpacity 
-                onPress={() => navigation.navigate("lecturasVistas")}
-                style={styles.lecturas}
-                >
-                  <View className="flex flex-row justify-between">
-                    <FontAwesome5 name="book" size={30} color="white" />
-                    <AntDesign name="arrowright" size={24} color="black" />
-                  </View>
-                  <Text className="text-white font-bold">Lecturas</Text>
-                  
-                </TouchableOpacity>
-             
-        
-          
-        
-     
-                </View>
+      <View style={styles.cardsContainer}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("versiculosFavoritos")}
+          activeOpacity={0.9}
+        >
+          <LinearGradient
+            colors={["#FF7E1F", "#FEB27B"]}
+            style={[styles.card, { width: cardWidth }]}
+          >
+            <View style={styles.iconContainer}>
+              <FontAwesome5 name="book" size={24} color="white" />
+            </View>
+            <Text style={styles.cardTitle}>Versículos Guardados</Text>
+            <AntDesign
+              name="arrowright"
+              size={20}
+              color="white"
+              style={styles.arrow}
+            />
+          </LinearGradient>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate("lecturasVistas")}
+          activeOpacity={0.9}
+        >
+          <LinearGradient
+            colors={["#6A65FB", "#8C9EFF"]}
+            style={[styles.card, { width: cardWidth }]}
+          >
+            <View style={styles.iconContainer}>
+              <FontAwesome5 name="book-open" size={24} color="white" />
+            </View>
+            <Text style={styles.cardTitle}>Lecturas Recientes</Text>
+            <AntDesign
+              name="arrowright"
+              size={20}
+              color="white"
+              style={styles.arrow}
+            />
+          </LinearGradient>
+        </TouchableOpacity>
       </View>
-    );
-  }
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
-    inicio: {
-      width: 180,
-      height: 130,
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-around",
-      backgroundColor: "blue",
-      borderRadius: 10, 
-      padding: 10,
-      marginRight: 10
-    },
-   
-    verciculos: {
-      width: 180,
-      height: 130,
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-around",
-     backgroundColor: "#F97316",
-      borderRadius: 10, 
-      padding: 10,
-      marginRight: 10
-      
-    },
-    notificationIcon: {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
-    top: 85,
-    left: 5,
-      
-    },
-    lecturaDiaria: {
-      
-      width: 180,
-      height: 130,
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-around",
-     backgroundColor: "red",
-      borderRadius: 10, 
-      padding: 10,
-      marginRight: 10
-    },
-    lecturas: {
-      
-      width: 180,
-      height: 130,
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-around",
-     backgroundColor: "purple",
-      borderRadius: 10, 
-      padding: 10,
-      justifyContent: "space-around",
-    },
-    notificationLottie: {
-        width: 40,
-        height: 40,
-        borderRadius: 50,
-        overflow: "hidden",
-        position: "absolute",
-        right: -10,
-        bottom: 70,
-    },
-   
-  cerebro: {
-    width: 100,
-    height: 40,
-    position: "relative",
-    right: 20,
-    marginBottom: 5,
+ 
+  title: {
+    color: "white",
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 15,
+    fontFamily: "Inter-Bold",
   },
-  modalContainer: {
-   position: "absolute",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
+  cardsContainer: {
+    flexDirection: "row",
+    
+    gap: 15,
+  },
+  card: {
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: "rgba(255, 255, 255, 0.5)",
+    padding: 20,
+    aspectRatio: 1,
+    justifyContent: "space-between",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  iconContainer: {
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "skyblue",
+    marginBottom: 15,
   },
-  modalText: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "orange",
+  cardTitle: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "600",
+    lineHeight: 24,
+    fontFamily: "Inter-SemiBold",
   },
-  modalLottie: {
-    width: 400,
-    height: 400,
+  arrow: {
+    alignSelf: "flex-end",
+    marginTop: 10,
   },
- 
-  
 });

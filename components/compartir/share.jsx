@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
   // Contenedor externo para centrar la tarjeta en la pantalla
   outerContainer: {
    marginTop: 10,
-    backgroundColor: '#f0f0f0', // Fondo neutro para resaltar la tarjeta
+   // backgroundColor: '#f0f0f0', // Fondo neutro para resaltar la tarjeta
   },
   cardContainer: {
     width: '100%',

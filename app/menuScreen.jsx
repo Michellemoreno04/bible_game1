@@ -2,6 +2,7 @@ import { StyleSheet, ScrollView, View, Text, TouchableOpacity, Alert } from 'rea
 import { MaterialIcons } from '@expo/vector-icons';
 import useAuth from '../components/authContext/authContext';
 import { useNavigation } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 const MenuScreen = () => {
 
 const { signOut } = useAuth();
@@ -24,8 +25,9 @@ const navigation = useNavigation();
     ]);
   };
   return (
+    <SafeAreaView style={styles.container}>
     <ScrollView style={styles.container}>
-      <Text className="text-2xl font-bold pb-10"> Ajustes y Privacidad</Text>
+      <Text className="text-2xl text-center font-bold pb-10"> Ajustes y Privacidad</Text>
       {/* Sección Principal */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Cuenta</Text>
@@ -66,6 +68,7 @@ const navigation = useNavigation();
         <Text style={styles.logoutText}>Cerrar sesión</Text>
       </TouchableOpacity>
     </ScrollView>
+  </SafeAreaView>
   );
 };
 
@@ -73,7 +76,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
-    padding: 16,
+    paddingHorizontal: 10,
   },
   section: {
     backgroundColor: 'white',

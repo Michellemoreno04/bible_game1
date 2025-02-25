@@ -83,6 +83,7 @@ export default function RootLayout() {
                 headerTransparent: true,
                 headerTitle: "",
                 headerTintColor: "#fff",
+                gestureEnabled: false,
               }}
             />
             <Stack.Screen
@@ -124,9 +125,10 @@ export default function RootLayout() {
             <Stack.Screen
               name="menuScreen"
               options={{
-                headerShown: false,
+                headerShown: true,
                 headerBackTitle: "volver",
-                presentation: "modal",
+                headerTitle: "Menu",
+                //presentation: "modal",
                 
               }}
             />

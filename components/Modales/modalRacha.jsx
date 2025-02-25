@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet,width } from 'react-native';
 import Modal from 'react-native-modal';
 import LottieView from 'lottie-react-native';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import { Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { db } from '../../components/firebase/firebaseConfig';
@@ -13,216 +13,247 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 
 export function ModalRacha({ isVisible, setShowModalRacha }) {
-const { user } = useAuth();
-  const  playSound  = useSound();
+  const { user } = useAuth();
+  const playSound = useSound();
   const navigation = useNavigation();
   const [userInfo, setUserInfo] = useState({});
 
-useEffect(() => {
-  if (isVisible) {
-    playSound(require('../../assets/sound/rachaSound.mp3'));
-  }
-
-}, [isVisible]);
-
-
-
+  useEffect(() => {
+    if (isVisible) {
+      playSound(require('../../assets/sound/rachaSound.mp3'));
+    }
+  }, [isVisible]);
 
   useEffect(() => {
     const userDocRef = doc(db, 'users', user.uid);
     const unsubscribe = onSnapshot(userDocRef, (doc) => {
       if (doc.exists()) {
-        const userData = doc.data();
-        setUserInfo(userData);
+        setUserInfo(doc.data());
       }
-     
-
     });
-
-    return () => {
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, []);
 
- 
-
-
-
-   // Función para cerrar el modal
-    const closeModal = () => {
-      
+  const closeModal = () => {
     setShowModalRacha(false);
-      
-      navigation.navigate('(tabs)');
-    };
+    navigation.navigate('(tabs)');
+  };
 
   return (
-    <Modal isVisible={isVisible} animationIn="zoomIn" animationOut="zoomOut">
-    <View style={styles.modalContainer}>
-      <Text style={styles.title}>🔥 Récord Diario 🔥</Text>
-  
-      {/* Anillo de progreso alrededor de la animación */}
-      <View style={styles.progressRing}>
-        <View style={styles.animationContainer}>
-          <LottieView
-            source={require('../../assets/lottieFiles/fireRachaIcon.json')}
-            autoPlay
-            loop
-            style={{ width: 180, height: 180 }}
-          />
-        </View>
-      </View>
-  
-      <Text style={styles.highlightedText}>
-        ¡Estás en llamas!{'\n'}Sigue así 🔥
-      </Text>
-  
-      <View style={styles.statsContainer}>
-        <View style={[styles.statBox, styles.elevatedBox]}>
-          <View style={styles.iconBadge}>
-            <FontAwesome5 name="fire" size={28} color="#FF6B35" />
-          </View>
-          <Text style={styles.statNumber}>{userInfo.Racha}</Text>
-          <Text style={styles.statLabel}>Días consecutivos</Text>
-        </View>
-  
-        <View style={[styles.statBox, styles.elevatedBox]}>
-          <View style={styles.iconBadge}>
-            <FontAwesome5 name="trophy" size={28} color="#FFD700" />
-          </View>
-          <Text style={styles.statNumber}>{userInfo.RachaMaxima}</Text>
-          <Text style={styles.statLabel}>Racha máxima</Text>
-        </View>
-      </View>
-  
-      <View style={styles.footerContainer}>
-        <Pressable 
-          style={({pressed}) => [
-            styles.closeButton,
-            pressed && {transform: [{scale: 0.95}]}
-          ]} 
-          onPress={closeModal}
+    <Modal
+      isVisible={isVisible}
+      onBackdropPress={closeModal}
+      backdropOpacity={0.90}
+      animationIn="zoomIn"
+      animationOut="zoomOut"
+      backdropTransitionInTiming={600}
+    >
+      <View style={styles.container}>
+        <LinearGradient
+          colors={['#1A1E32', '#2A2F4D', '#1A1E32']}
+          style={styles.gradientContainer}
         >
-          <LinearGradient
-            colors={['#FF6B35', '#FF8E53']}
-            style={styles.gradientButton}
-          >
-            <Text style={styles.closeButtonText}>¡Continuar racha!</Text>
-          </LinearGradient>
-        </Pressable>
-      </View>
-    </View>
-  </Modal>
-  )}
+          {/* Cabecera */}
+          <View style={styles.header}>
+            <MaterialIcons name="stars" size={28} color="#FFB802" />
+            <Text style={styles.title}>🔥 Récord Diario 🔥</Text>
+            <MaterialIcons name="stars" size={28} color="#FFB802" />
+          </View>
 
-  const styles = StyleSheet.create({
-    modalContainer: {
-      backgroundColor: '#FFF9F2',
-      borderRadius: 25,
-      padding: 25,
-      alignItems: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: 0.1,
-      shadowRadius: 20,
-      elevation: 10,
-    },
-    title: {
-      fontSize: 28,
-      fontWeight: '800',
-      color: '#2F4858',
-      marginBottom: 15,
-      textAlign: 'center',
-      letterSpacing: 0.5,
-    },
-    progressRing: {
-      borderRadius: 150,
-      padding: 10,
-      backgroundColor: '#FFF2E6',
-      marginVertical: 20,
-      shadowColor: '#FF6B35',
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.3,
-      shadowRadius: 15,
-    },
-    animationContainer: {
-      width: 200,
-      height: 200,
-      borderRadius: 100,
-      overflow: 'hidden',
-      backgroundColor: '#FFEEDD',
-      borderWidth: 5,
-      borderColor: '#FFD6B3',
-    },
-    highlightedText: {
-      fontSize: 22,
-      fontWeight: '700',
-      color: '#FF6B35',
-      textAlign: 'center',
-      lineHeight: 30,
-      marginVertical: 15,
-    },
-    statsContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      width: '100%',
-      marginVertical: 20,
-    },
-    statBox: {
-      alignItems: 'center',
-      padding: 20,
-      borderRadius: 15,
-      flex: 1,
-      marginHorizontal: 5,
-      backgroundColor: 'white',
-    },
-    elevatedBox: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 5 },
-      shadowOpacity: 0.1,
-      shadowRadius: 10,
-      elevation: 5,
-    },
-    iconBadge: {
-      backgroundColor: '#FFF2E6',
-      padding: 12,
-      borderRadius: 50,
-      marginBottom: 10,
-    },
-    statNumber: {
-      fontSize: 32,
-      fontWeight: '900',
-      color: '#2F4858',
-      marginBottom: 5,
-    },
-    statLabel: {
-      fontSize: 14,
-      color: '#6C757D',
-      fontWeight: '600',
-      textAlign: 'center',
-    },
-    closeButton: {
-      width: '100%',
-      borderRadius: 15,
-      overflow: 'hidden',
-      marginTop: 15,
-    },
-    gradientButton: {
-      paddingVertical: 15,
-      paddingHorizontal: 40,
-      alignItems: 'center',
-      borderRadius: 30,
-    },
-    closeButtonText: {
-      color: 'white',
-      fontSize: 18,
-      fontWeight: '700',
-      letterSpacing: 0.5,
-    },
-    footerText: {
-      fontSize: 16,
-      color: '#6C757D',
-      marginTop: 15,
-      fontStyle: 'italic',
-    },
-  });
+          {/* Animación de fuego */}
+          <View style={styles.animationContainer}>
+            <LottieView
+              source={require('../../assets/lottieFiles/fireRachaIcon.json')}
+              autoPlay
+              loop
+              style={styles.animation}
+            />
+          </View>
+
+          <Text style={styles.highlightedText}>
+            ¡Estás en llamas!{'\n'}Sigue así 🔥
+          </Text>
+
+          {/* Estadísticas */}
+          <View style={styles.statsContainer}>
+            <LinearGradient
+              colors={['#FFB80222', '#FF8C0011']}
+              style={[styles.statBox, styles.elevatedBox]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={styles.iconBadge}>
+                <FontAwesome5 name="fire" size={28} color="#FF6B35" />
+              </View>
+              <Text style={styles.statNumber}>{userInfo.Racha}</Text>
+              <Text style={styles.statLabel}>Días consecutivos</Text>
+            </LinearGradient>
+
+            <LinearGradient
+              colors={['#00E0FF22', '#00B8D411']}
+              style={[styles.statBox, styles.elevatedBox]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={styles.iconBadge}>
+                <FontAwesome5 name="trophy" size={28} color="#FFD700" />
+              </View>
+              <Text style={styles.statNumber}>{userInfo.RachaMaxima}</Text>
+              <Text style={styles.statLabel}>Racha máxima</Text>
+            </LinearGradient>
+          </View>
+
+          {/* Botón de acción */}
+          <Pressable 
+            onPress={closeModal} 
+            style={({ pressed }) => [
+              styles.button,
+              pressed && styles.buttonPressed
+            ]}
+          >
+            <LinearGradient
+              colors={['#FFB802', '#FF8C00']}
+              style={styles.buttonGradient}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+            >
+              <Text style={styles.buttonText}>¡Continuar racha!</Text>
+              <MaterialIcons name="arrow-forward" size={24} color="white" />
+            </LinearGradient>
+          </Pressable>
+        </LinearGradient>
+      </View>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  gradientContainer: {
+    width: width * 0.9,
+    borderRadius: 30,
+    padding: 25,
+    alignItems: 'center',
+    borderWidth: 4,
+    borderColor: '#FFB80299',
+    shadowColor: '#FFB80299',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 15,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    gap: 10,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#FFD700',
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    textAlign: 'center',
+    textShadowColor: 'rgba(255, 184, 2, 0.4)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 15,
+  },
+  animationContainer: {
+    width: 200,
+    height: 200,
+    marginVertical: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 100,
+    borderWidth: 4,
+    borderColor: '#FFB80299',
+    backgroundColor: '#00000022',
+  },
+  animation: {
+    width: '100%',
+    height: '100%',
+  },
+  highlightedText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFD700',
+    textAlign: 'center',
+    marginVertical: 15,
+    lineHeight: 30,
+    textShadowColor: 'rgba(255, 107, 53, 0.4)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginVertical: 15,
+    gap: 15,
+  },
+  statBox: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 15,
+    borderRadius: 20,
+    borderWidth: 2,
+  },
+  elevatedBox: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  iconBadge: {
+    backgroundColor: '#00000033',
+    padding: 12,
+    borderRadius: 50,
+    marginBottom: 10,
+  },
+  statNumber: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#FFD700',
+    marginBottom: 5,
+    textShadowColor: 'rgba(255, 215, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  },
+  statLabel: {
+    fontSize: 14,
+    color: '#EEE',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  button: {
+    width: '100%',
+    borderRadius: 25,
+    overflow: 'hidden',
+    marginTop: 15,
+    
+  },
+  buttonGradient: {
+    padding: 15,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: 25,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+  },
+  buttonPressed: {
+    transform: [{ scale: 0.96 }],
+    opacity: 0.9,
+  },
+});

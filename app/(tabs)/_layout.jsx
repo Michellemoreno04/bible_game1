@@ -10,13 +10,28 @@ export default function TabLayout() {
 
   return (
     <Tabs
-      screenOptions={{ tabBarActiveTintColor: 'blue',
-      tabBarStyle: {
-        backgroundColor: 'white',
-        borderTopWidth: 0, 
+      screenOptions={{
+         tabBarActiveTintColor: '#fff',
+        tabBarInactiveTintColor: 'skyblue',
+   
+        tabBarStyle: {
+          backgroundColor: '#3C7E9F',
+          borderTopWidth: 0,
+          height: 60,
+          width: '100%',
+          
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.2,
+          shadowRadius: 10,
+          elevation: 5,
+          justifyContent: 'center',
+          alignItems: 'center',
+          
+          
         
-       
-      }
+        
+        },
        }}>
         
       <Tabs.Screen
@@ -25,11 +40,12 @@ export default function TabLayout() {
         options={{
           title: 'Home',
         headerShown: false,
-        tabBarIcon: ({ color }) => <Icon name="day-haze" type="fontisto" color={color} size={26}
+        tabBarIcon: ({ color }) => <Icon name="day-haze" type="fontisto" color={color} size={26}/>,
+       
         
-        />,
 
         }}
+        
       />
 
       <Tabs.Screen
@@ -38,6 +54,8 @@ export default function TabLayout() {
           title: 'Profile',
           headerShown: false,
           tabBarIcon: ({ color }) => <MaterialCommunityIcons name="account" color={color} size={26} />,
+         
+        
         }}
       />
     

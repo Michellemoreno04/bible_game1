@@ -1,11 +1,10 @@
-import { Text, View, StyleSheet, SafeAreaView, ScrollView, Alert, ActivityIndicator,Image } from 'react-native';
+import { Text, View, StyleSheet, SafeAreaView, ScrollView, Alert, ActivityIndicator, Image } from 'react-native';
 import '../../global.css';
-import {FontAwesome5, MaterialCommunityIcons} from '@expo/vector-icons';
+import { FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
 import useAuth from '../../components/authContext/authContext';
-import React, { useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
-import {db } from '@/components/firebase/firebaseConfig';
-
+import { db } from '@/components/firebase/firebaseConfig';
 import { niveles } from '@/components/Niveles/niveles';
 import VersiculosDiarios from '@/components/VersiculoDiario/versiculoDiario';
 import NivelModal from '@/components/Modales/modalNivel';
@@ -15,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Avatar } from '@rneui/base';
 import ExploraComponent from '@/components/exploraComponents/exploraComponent';
 import GuardadosComponents from '@/components/exploraComponents/guardadosComponents';
+import { StatusBar } from 'expo-status-bar';
 
 export default function AppComponent() {
   const { user } = useAuth();
@@ -22,10 +22,10 @@ export default function AppComponent() {
   const [userAuthenticated, setUserAuthenticated] = useState({});
   const [showNivelModal, setShowNivelModal] = useState(false);
   const [nivelAnterior, setNivelAnterior] = useState(null);
-  const [isLoading, setIsLoading] = useState(true); // Nuevo estado de carga
+  const [isLoading, setIsLoading] = useState(true);
 
   const userId = user?.uid;
- // Función para verificar si el usuario está autenticado
+
   useEffect(() => {
     if (!userId) return;
 
@@ -41,52 +41,42 @@ export default function AppComponent() {
         updateDoc(userRef, { Nivel: nivelActual });
 
         if (nivelAnterior !== null && nivelActual > nivelAnterior) {
-          Alert.alert(
-            'Has subido de nivel',
-            `Has subido del nivel ${nivelAnterior} al ${nivelActual}`,
-            [{ text: 'OK', onPress: () => setShowNivelModal(true) }]
-          );
+          setShowNivelModal(true);
         }
 
         setNivelAnterior(nivelActual);
       }
-      setIsLoading(false); // Finaliza la carga
+      setIsLoading(false);
     });
 
     return () => unsubscribe();
   }, [userId]);
 
-// Función para guardar la insignia
   useEffect(() => {
     const guardarInsignia = async () => {
-        if (!userAuthenticated.Exp) return;
+      if (!userAuthenticated.Exp) return;
 
-        const nuevaInsignia = niveles(userAuthenticated.Exp).insignia;
-        const userRef = doc(db, 'users', userId);
+      const nuevaInsignia = niveles(userAuthenticated.Exp).insignia;
+      const userRef = doc(db, 'users', userId);
 
-        try {
-            // Obtener el documento actual
-            const userDoc = await getDoc(userRef);
-            const currentInsignias = userDoc.data()?.Insignias || [];
+      try {
+        const userDoc = await getDoc(userRef);
+        const currentInsignias = userDoc.data()?.Insignias || [];
 
-            // Verificar si la insignia ya existe para no duplicar
-            if (!currentInsignias.includes(nuevaInsignia)) {
-                // Crear nuevo array con la insignia nueva al principio
-                const updatedInsignias = [nuevaInsignia, ...currentInsignias];
-
-                // Actualizar el documento
-                await updateDoc(userRef, {
-                    Insignias: updatedInsignias
-                });
-                console.log('Insignia agregada al principio con éxito');
-            }
-        } catch (error) {
-            console.error('Error al actualizar insignias:', error);
+        if (!currentInsignias.includes(nuevaInsignia)) {
+          const updatedInsignias = [nuevaInsignia, ...currentInsignias];
+          await updateDoc(userRef, {
+            Insignias: updatedInsignias
+          });
+          console.log('Insignia agregada al principio con éxito');
         }
+      } catch (error) {
+        console.error('Error al actualizar insignias:', error);
+      }
     };
 
     guardarInsignia();
-}, [userAuthenticated.Exp, userId]); 
+  }, [userAuthenticated.Exp, userId]);
 
   if (isLoading) {
     return <ActivityIndicator size="large" color="#0000ff" />;
@@ -94,63 +84,55 @@ export default function AppComponent() {
 
   return (
     <LinearGradient
-      colors={['#ffffff', '#e8f4f8']}
+      colors={[ '#1E3A5F', '#3C6E9F']}
       style={styles.container}
     >
       <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView >
-        <View style={styles.screen} >
-          <NivelModal
-          Exp={userAuthenticated?.Exp}
-            nivel={userAuthenticated?.Nivel}
-            isVisible={showNivelModal}
-            onClose={() => setShowNivelModal(false)}
-          />
-          
-          
-          <View style={styles.headerContainer}>
-  {/* Contenedor Izquierdo: Avatar e Información */}
-  <View style={styles.leftContainer}>
-    <Avatar
-    size={60}
-    rounded
-     source={require('../../assets/images/Loader.png')} />
-    <View style={styles.userInfo}>
-      <Text style={styles.greeting}>
-        {`Hola!, ${userAuthenticated?.Name || 'Anónimo'}`}
-      </Text>
-      <View  className=" flex-row items-center">
+        <ScrollView>
+          <View style={styles.screen}>
+            <NivelModal
+              Exp={userAuthenticated?.Exp}
+              nivel={userAuthenticated?.Nivel}
+              isVisible={showNivelModal}
+              onClose={() => setShowNivelModal(false)}
+            />
 
-      <Text style={styles.level} className="bg-blue-100">
-        {`Nivel ${niveles(userAuthenticated?.Exp || 0).nivel} -> ${niveles(userAuthenticated?.Exp || 0).insignia}`}
-      </Text>
-      <MaterialCommunityIcons name="medal" size={20} color="#f59e0b"/>
-                            </View>
-    </View>
-  </View>
+            <View style={styles.headerContainer}>
+              <View style={styles.leftContainer}>
+                <Avatar
+                  size={60}
+                  rounded
+                  source={require('../../assets/images/Loader.png')}
+                />
+                <View style={styles.userInfo}>
+                  <Text style={styles.greeting}>
+                    {`Hola!, ${userAuthenticated?.Name || 'Anónimo'}`}
+                  </Text>
+                  <View className="flex-row items-center justify-center">
+                    <Text style={styles.level} >
+                      {niveles(userAuthenticated?.Exp || 0).insignia}
+                    </Text>
+                  </View>
+                </View>
+              </View>
 
-  {/* Contenedor Derecho: Racha */}
-  <View style={styles.rachaContainer}>
-    <Text style={styles.rachaText}>{userAuthenticated?.Racha || 0}</Text>
-    <FontAwesome5 name="fire-alt" size={24} color="#FFD700" />
-  </View>
-</View>
-
+              <View style={styles.rachaContainer}>
+                <Text style={styles.rachaText}>{userAuthenticated?.Racha || 0}</Text>
+                <FontAwesome5 name="fire-alt" size={24} color="#FFD700" />
+              </View>
+            </View>
 
             <VersiculosDiarios />
             <ExploraComponent />
             <GuardadosComponents />
             <ShareButton />
-            
           </View>
         </ScrollView>
-          </SafeAreaView>
-      
-          </LinearGradient>
+      </SafeAreaView>
+      <StatusBar style="light" />
+    </LinearGradient>
   );
 }
-
-
 
 const styles = StyleSheet.create({
   container: {
@@ -159,19 +141,15 @@ const styles = StyleSheet.create({
   screen: {
     height: '100%',
     padding: 10,
-    
   },
   headerContainer: {
     width: '100%',
-   
     flexDirection: 'row',
-    justifyContent: 'space-between', 
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 10,
     marginBottom: 15,
-   
   },
-  
   leftContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -182,21 +160,20 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: '#FFFFFF', // Texto blanco para contrastar con el fondo oscuro
   },
   level: {
     fontSize: 14,
-    color: '#555',
-    padding: 5,
-    borderRadius: 5,
+    color: '#FFFFFF', // Texto blanco
     
+    borderRadius: 5,
   },
-
   rachaContainer: {
     position: 'relative',
     bottom: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF3E0',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)', // Fondo semi-transparente
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 50,
@@ -205,8 +182,7 @@ const styles = StyleSheet.create({
   rachaText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#FFA000',
+    color: '#FFD700', // Texto dorado
     marginLeft: 5,
   },
-
 });

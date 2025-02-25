@@ -22,6 +22,10 @@ import {
   setDoc,
   writeBatch,
   addDoc,
+  updateDoc,
+  orderBy,
+  startAfter,
+  
 } from "firebase/firestore";
 import useAuth from "../authContext/authContext";
 import { useNavigation } from "@react-navigation/native";
@@ -41,83 +45,84 @@ const VersiculosDiarios = () => {
 
   // Creamos el ref para capturar la vista completa (incluyendo el fondo y el contenido)
   const viewRef = useRef();
-
-    
+      
+    // Obtener versículo del día
   useEffect(() => {
     if (!userId) return;
   
     const fetchVersiculoDelDia = async () => {
       try {
-        const versiculoDocRef = doc(db, `users/${userId}/versiculoDelDia/current`);
-        const versiculoDoc = await getDoc(versiculoDocRef);
+        const userDocRef = doc(db, 'users', userId);
+        const versiculoDocRef = doc(userDocRef, 'versiculoDelDia/current');
+        
+        // 1. Obtener documento del usuario y último índice usado
+        const [userDoc, currentVerseDoc] = await Promise.all([
+          getDoc(userDocRef),
+          getDoc(versiculoDocRef)
+        ]);
+  
         const currentTime = new Date();
-  
-        // Si ya existe un versículo almacenado, comparar las fechas (sin hora)
-        if (versiculoDoc.exists()) {
-          const data = versiculoDoc.data();
-          const storedTimestamp = data.timestamp.toDate();
-  
-          // Si el versículo fue almacenado hoy, lo usamos y salimos de la función.
-          if (storedTimestamp.toDateString() === currentTime.toDateString()) {
+        
+        // 2. Verificar si hay versículo de hoy
+        if (currentVerseDoc.exists()) {
+          const data = currentVerseDoc.data();
+          if (data.timestamp.toDate().toDateString() === currentTime.toDateString()) {
             setVersiculo(data.versiculo);
             return;
           }
         }
   
-        // Si no hay versículo del día o ya no es de hoy, obtener uno nuevo.
-        const versiculosVistosRef = collection(db, `users/${userId}/versiculosVistos`);
-        const versiculosRef = collection(db, "versiculosDiarios");
-  
-        // 1. Obtener los versículos que ya fueron vistos.
-        const vistosSnapshot = await getDocs(versiculosVistosRef);
-        const vistos = vistosSnapshot.docs.map(doc => doc.id);
-  
-        let nuevoVersiculo;
-        let q;
-  
-        // 2. Consultar un versículo que no haya sido visto.
-        if (vistos.length > 0) {
-          q = query(versiculosRef, where("__name__", "not-in", vistos), limit(1));
-        } else {
-          q = query(versiculosRef, limit(1));
-        }
+        // 3. Obtener el último índice usado del usuario
+        const lastIndex = userDoc.data()?.lastVerseIndex || 0;
         
+        // 4. Buscar siguiente versículo por índice
+        const q = query(
+          collection(db, "versiculosDiarios"),
+          orderBy("index", "asc"),
+          startAfter(lastIndex),
+          limit(1)
+        );
+  
         let snapshot = await getDocs(q);
+        let nuevoVersiculo = snapshot.docs[0];
   
-        // 3. Si no quedan versículos nuevos, reiniciamos la lista de vistos.
-        if (snapshot.empty) {
-          const batch = writeBatch(db);
-          vistosSnapshot.docs.forEach(doc => batch.delete(doc.ref));
-          await batch.commit();
-  
-          // Se vuelve a obtener el primer versículo disponible.
-          snapshot = await getDocs(query(versiculosRef, limit(1)));
-          if (snapshot.empty) {
-            throw new Error("No hay versículos disponibles en la base de datos");
-          }
+        // 5. Si no hay más versículos, reiniciar contador
+        if (!nuevoVersiculo) {
+          const resetQuery = query(
+            collection(db, "versiculosDiarios"),
+            orderBy("index", "asc"),
+            limit(1)
+          );
+          snapshot = await getDocs(resetQuery);
+          nuevoVersiculo = snapshot.docs[0];
         }
   
-        nuevoVersiculo = snapshot.docs[0];
+        if (!nuevoVersiculo) {
+          throw new Error("No hay versículos disponibles");
+        }
+  
+        // 6. Actualizar en lote
+        const batch = writeBatch(db);
+        const newIndex = nuevoVersiculo.data().index;
         const verseData = { id: nuevoVersiculo.id, ...nuevoVersiculo.data() };
   
-        // 4. Actualizar de forma atómica:
-        // - Guardamos el versículo como visto.
-        // - Actualizamos el documento del versículo del día.
-        const newBatch = writeBatch(db);
-        const vistoDocRef = doc(versiculosVistosRef, nuevoVersiculo.id);
+        // Actualizar último índice en usuario
+        batch.update(userDocRef, {
+          lastVerseIndex: newIndex
+        });
   
-        newBatch.set(vistoDocRef, { timestamp: serverTimestamp() });
-        newBatch.set(versiculoDocRef, {
+        // Guardar versículo actual
+        batch.set(versiculoDocRef, {
           versiculo: verseData,
           timestamp: serverTimestamp()
         });
   
-        await newBatch.commit();
+        await batch.commit();
         setVersiculo(verseData);
   
       } catch (error) {
         console.error("Error obteniendo versículo:", error);
-        // Aquí podrías asignar un versículo por defecto o notificar el error al usuario.
+        // Manejar error o asignar versículo por defecto
       }
     };
   
@@ -265,8 +270,6 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     opacity: 0.5,
     borderRadius: 20,
-    marginBottom: 2,
-   
     justifyContent: 'center',
     alignContent: 'center'
   },
@@ -278,8 +281,8 @@ const styles = StyleSheet.create({
     lineHeight: 36, // Interlineado mayor
     textAlign: "center",
     fontFamily: 'Georgia', // Fuente serif si está disponible
-    marginHorizontal: 15,
-    marginTop: 10,
+    marginHorizontal: 10,
+    //marginTop: 5,
    
   },
   reference: {

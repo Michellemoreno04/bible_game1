@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert, ImageBackground } from
 import { AntDesign, FontAwesome5, MaterialCommunityIcons, Octicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { doc, updateDoc, onSnapshot, getDocs, collection, limit, query, where, addDoc, documentId } from 'firebase/firestore';
+import { doc, updateDoc, onSnapshot, getDocs, collection, limit, query, getDoc,arrayUnion, Timestamp, orderBy, startAfter, serverTimestamp, increment, setDoc } from 'firebase/firestore';
 import useAuth from '../components/authContext/authContext';
 import { db } from '../components/firebase/firebaseConfig';
 import { ModalPuntuacion } from '@/components/Modales/modalPuntuacion';
@@ -13,6 +13,9 @@ import { manejarRachaDiaria } from '@/components/Racha/manejaRacha';
 import { useSound } from '@/components/soundFunctions/soundFunction';
 import { useBackgroundMusic } from '@/components/soundFunctions/soundFunction';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import NivelModal from '@/components/Modales/modalNivel';
+import { niveles } from '@/components/Niveles/niveles';
+
 
 const BibleQuiz = () => {
   const navigation = useNavigation();
@@ -31,55 +34,91 @@ const BibleQuiz = () => {
   const [monedasGanadas, setMonedasGanadas] = useState(0);
   const [expGanada, setExpGanada] = useState(0);
   const [preguntasRespondidas, setPreguntasRespondidas] = useState([]);
-
+  const [showNivelModal, setShowNivelModal] = useState(false);
+  const [lastDoc, setLastDoc] = useState([]);
   const { user } = useAuth();
   const userId = user?.uid;
 
-  // Obtén las preguntas de Firestore
-  const fetchQuestions = async () => {
+
+  // Verifica el nivel del usuario para mostrar el modal de nivel  
+ useEffect(() => {
+  const checkNivel = async () => {
+    const userRef = doc(db, 'users', userId);
     try {
-      const userDocRef = doc(db, 'users', user?.uid);
-      const preguntasRespondidasSnapshot = await getDocs(collection(userDocRef, 'Preguntas Respondidas'));
-      const respuestasRespondidas = preguntasRespondidasSnapshot.docs.map(doc => doc.data().questionId);
-
-      setPreguntasRespondidas(respuestasRespondidas);
-
-      let q;
-      if (respuestasRespondidas.length > 0) {
-        q = query(
-          collection(db, 'preguntas'),
-          where(documentId(), 'not-in', respuestasRespondidas),
-          limit(2)
-        );
-      } else {
-        q = query(collection(db, 'preguntas'), limit(2));
+      if (userInfo.Exp) {
+        const nivelActual = niveles(userInfo.Exp).nivel;
+        const nivelAnterior = userInfo.Nivel || 0;
+  
+        updateDoc(userRef, { Nivel: nivelActual });
+  
+        if (nivelAnterior !== null && nivelActual > nivelAnterior) {
+          setShowNivelModal(true);
+         // console.log('debio mostrar modal');
+        }else{
+          //console.log('noo debio mostrar modal');
+        }
       }
-
-      const querySnapshot = await getDocs(q);
-      const preguntas = querySnapshot.docs.map(doc => ({
-        questionId: doc.id,
-        ...doc.data(),
-      }));
-
-      if (preguntas.length === 0) {
-        Alert.alert('No hay preguntas disponibles.');
-        return;
-      }
-
-      setQuestions(preguntas);
     } catch (error) {
-      console.error('Error al obtener las preguntas:', error);
-      Alert.alert('Error', 'No se pudieron obtener más preguntas.');
+      console.error('Error al verificar el nivel:', error);
     }
   };
+  checkNivel();
+  }, [userInfo.Nivel, userInfo.Exp]);
 
-  // Escucha en tiempo real para obtener las preguntas
+  // Obtén las preguntas de Firestore
   useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', fetchQuestions);
-    return () => {
-      navigation.removeListener('focus', fetchQuestions);
+    const fetchQuestions = async () => {
+      try {
+        const userDocRef = doc(db, 'users', user?.uid);
+        
+        // 1. Obtener el último índice de la subcolección de preguntas respondidas
+        const answeredColRef = collection(userDocRef, 'preguntas_respondidas');
+        const lastAnsweredQuery = query(
+          answeredColRef,
+          orderBy('index', 'desc'),
+          limit(1)
+        );
+        
+        const lastAnsweredSnapshot = await getDocs(lastAnsweredQuery);
+        let lastQuestionIndex = 0;
+        
+        if (!lastAnsweredSnapshot.empty) {
+          lastQuestionIndex = lastAnsweredSnapshot.docs[0].data().index;
+        }
+  
+        // 2. Configurar la consulta paginada en la colección "preguntas"
+        const q = query(
+          collection(db, 'preguntas'),
+          orderBy('index'),
+          startAfter(lastQuestionIndex),
+          limit(2)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+          console.log('No hay más preguntas disponibles.');
+          return;
+        }
+        
+        // 3. Mapear los documentos obtenidos
+        const nuevasPreguntas = querySnapshot.docs.map(doc => ({
+          questionId: doc.id,
+          ...doc.data(),
+        }));
+        
+        setQuestions(nuevasPreguntas);
+      } catch (error) {
+        console.error('Error al obtener las preguntas:', error);
+        Alert.alert('Error', 'No se pudieron obtener más preguntas.');
+      }
     };
+  
+    fetchQuestions();
   }, []);
+  
+  
+
 
   // Escucha en tiempo real para obtener los datos del usuario
   useEffect(() => {
@@ -102,27 +141,45 @@ const BibleQuiz = () => {
   const correcta = questions[currentQuestion]?.correctAnswer;
   const respuestas = questions[currentQuestion]?.answers || [];
 
-  // Función para marcar una pregunta como respondida en Firestore
-  const marcarPreguntaRespondida = async (questionId) => {
-    if (!questionId) {
-      console.error('No se ha encontrado un ID de pregunta válido.');
-      return;
-    }
+// Función optimizada para marcar como respondida
+const marcarPreguntaRespondida = async (questionId, questionIndex) => {
+  if (!questionId || !user?.uid) return;
 
-    const userDocRef = doc(db, 'users', userId);
-    const preguntasRespondidasRef = collection(userDocRef, 'Preguntas Respondidas');
+  const userDocRef = doc(db, 'users', user.uid);
+  
+  try {
+    // 1. Crear documento en la subcolección de preguntas respondidas
+    const answeredQuestionRef = doc(
+      collection(userDocRef, 'preguntas_respondidas'),
+      questionId
+    );
+    
+    await setDoc(answeredQuestionRef, {
+      questionId,
+      index: questionIndex,
+      timestamp: serverTimestamp()
+    });
+    
+    // 2. Actualizar estado local
+    setPreguntasRespondidas(prev => [...prev, questionId]);
+  } catch (error) {
+    console.error('Error al marcar la pregunta:', error);
+  }
+};
 
-    try {
-      const docRef = await addDoc(preguntasRespondidasRef, {
-        questionId: questionId,
-        answeredAt: new Date(),
-      });
-      console.log('Pregunta respondida registrada en Firestore', docRef.id);
-      setPreguntasRespondidas((prev) => [...prev, questionId]);
-    } catch (error) {
-      console.error('Error al agregar la pregunta respondida:', error);
+
+
+// Escucha cambios en el documento del usuario
+useEffect(() => {
+  const userDocRef = doc(db, 'users', user?.uid);
+  const unsubscribe = onSnapshot(userDocRef, (doc) => {
+    if (doc.exists()) {
+      setPreguntasRespondidas(doc.data().answeredQuestions || []);
     }
-  };
+  });
+
+  return () => unsubscribe();
+}, []);
 
   // Función para comprobar la respuesta seleccionada
   const comprobarRespuesta = async () => {
@@ -137,7 +194,7 @@ const BibleQuiz = () => {
       setExpGanada((prevExp) => prevExp + 15);
       setMonedasGanadas((prevMonedas) => prevMonedas + 10);
       setResultadoRespuestas(resultadoRespuestas + 1);
-      await marcarPreguntaRespondida(questions[currentQuestion]?.questionId);
+      await marcarPreguntaRespondida(questions[currentQuestion]?.questionId, questions[currentQuestion]?.index);
 
       if (currentQuestion < questions.length - 1) {
         const userDocRef = doc(db, 'users', userId);
@@ -271,6 +328,7 @@ const BibleQuiz = () => {
     }
   };
 
+
   const showTextoBiblico = () => {
     Alert.alert(referencia, textoBiblico, [{ text: 'Cerrar' }]);
   };
@@ -318,7 +376,9 @@ const BibleQuiz = () => {
       <ModalPuntuacion userInfo={userInfo} expGanada={expGanada} monedasGanadas={monedasGanadas} respuestasCorrectas={resultadoRespuestas} isVisible={showModal} onClose={mostrarModalRacha} />
       <ModalRacha userInfo={userInfo} isVisible={showModalRacha} setShowModalRacha={setShowModalRacha} />
       <ModalRachaPerdida userInfo={userInfo} isVisible={showModalRachaPerdida} setShowModalRachaPerdida={setShowModalRachaPerdida} />
+      <NivelModal Exp={userInfo.Exp} nivel={userInfo?.Nivel} isVisible={showNivelModal} onClose={() => setShowNivelModal(false)}/>
 
+        
       <ImageBackground source={require('../assets/images/bg-quiz.png')} resizeMode="cover" style={styles.backgroundImage}>
         <View className='w-full h-full flex items-center '>
           <View className='w-full flex flex-row justify-between items-center '>
