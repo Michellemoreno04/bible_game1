@@ -4,38 +4,24 @@ import {
   Text,
   ScrollView,
   Pressable,
-  Alert,
   StyleSheet,
-  Linking,
-  Share,
-  Image
+  
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import {
-  MaterialCommunityIcons,
-  Feather,
-  AntDesign,
-  FontAwesome6,
-  FontAwesome5,
-  MaterialIcons
-} from '@expo/vector-icons';
+import { MaterialCommunityIcons, Feather, FontAwesome5 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import useAuth from '../../components/authContext/authContext';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../components/firebase/firebaseConfig';
 import { niveles } from '@/components/Niveles/niveles';
-import { Avatar } from '@rneui/themed';
-import { Icon } from '@rneui/themed';
+import { Avatar, Icon } from '@rneui/themed';
 
 export default function Profile() {
   const navigation = useNavigation();
   const { user, signOut } = useAuth();
   const [userInfo, setUserInfo] = useState({});
- 
 
-
-  // Escucha de cambios en la información del usuario en Firebase
   useEffect(() => {
     if (!user) return;
     const userRef = doc(db, 'users', user.uid);
@@ -45,318 +31,293 @@ export default function Profile() {
     return () => unsubscribe();
   }, [user]);
 
-
   return (
-    <SafeAreaView style={styles.safeAreaView}>
-      {/* Encabezado personalizado */}
-      <View className='flex-row items-center justify-between py-4 px-4'>
-        <Text className='text-2xl font-bold'>Perfil</Text>
-          <Pressable onPress={() => navigation.navigate('menuScreen')}>
-          <Icon 
-            name="menu"
-            type="ionicon"
-            size={30}
-            color="black"
-          />
+    <LinearGradient
+      colors={['#1E3A5F', '#3C6E9F']}
+      style={styles.gradientContainer}
+    >
+      <SafeAreaView style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Perfil</Text>
+          <Pressable 
+            onPress={() => navigation.navigate('menuScreen')}
+            style={styles.menuButton}
+          >
+            <Feather name="menu" size={28} color="white" />
           </Pressable>
-      </View>
+        </View>
 
-    
-      
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Tarjeta de Perfil con fondo degradado */}
-          <View style={styles.profileCard}>
-            <LinearGradient
-              colors={['#6366f1', '#4338ca']}
-              style={styles.gradient}
-            >
-              <View style={styles.profileHeader}>
-                <View style={styles.avatarContainer}>
-                  <Avatar
-                    style={[styles.avatar, { width: 100, height: 100 }]}
-                    source={
-                      userInfo?.FotoPerfil
-                        ? { uri: userInfo.FotoPerfil }
-                        : require('../../assets/images/icon.png')
-                    }
-                  />
-                 
-                </View>
-                <Text className='text-2xl font-bold text-white'>
-                  {userInfo?.Name || 'Usuario'}
-                </Text>
-                <Text className='text-lg text-white'>
-                  @{userInfo?.username || 'usuario123'}
-                </Text>
+        <ScrollView contentContainerStyle={styles.content}>
+          {/* Profile Card */}
+          <LinearGradient
+            colors={['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.05)']}
+            style={styles.profileCard}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <View style={styles.avatarContainer}>
+              {userInfo?.FotoPerfil ? (
+                <Avatar
+                  size={120}
+                  rounded
+                  source={{ uri: userInfo.FotoPerfil }}
+                  containerStyle={styles.avatar}
+                />
+              ) : (
+                <Avatar
+                  size={120}
+                  rounded
+                  title={userInfo?.Name?.charAt(0)}
+                  containerStyle={styles.avatar}
+                  titleStyle={styles.avatarText}
+                />
+              )}
+              
+            </View>
+
+            <Text style={styles.userName}>{userInfo?.Name || 'Usuario'}</Text>
+            <Text style={styles.userHandle}>@{userInfo?.username || 'usuario123'}</Text>
+
+            {/* Stats */}
+            <View style={styles.statsContainer}>
+              <View style={styles.statItem}>
+                <MaterialCommunityIcons name="lightning-bolt" size={28} color="#FFD700" />
+                <Text style={styles.statValue}>{userInfo?.RachaMaxima || 0}</Text>
+                <Text style={styles.statLabel}>Racha Máxima</Text>
               </View>
 
-              {/* Sección de Estadísticas */}
-              <View style={styles.statsContainer}>
-                <StatItem
-                  icon={
-                    <MaterialCommunityIcons
-                      name="lightning-bolt"
-                      size={24}
-                      color="#f59e0b"
-                    />
-                  }
-                  value={userInfo?.RachaMaxima || 0}
-                  label="Racha Máx"
-                />
-                <StatItem
-                  icon={
-                    <AntDesign name="linechart" size={24} color="#3b82f6" />
-                  }
-                  value={`Nivel ${userInfo?.Nivel || 1}`}
-                  label={niveles(userInfo?.Exp)?.insignia}
-                  progress={niveles(userInfo?.Exp)?.progreso}
-                />
-                <StatItem
-                  icon={
-                    <FontAwesome6 name="coins" size={24} color="#eab308" />
-                  }
-                  value={userInfo?.Monedas || 0}
-                  label="Monedas"
-                />
+              <View style={styles.statItem}>
+                <LinearGradient
+                  colors={['#4CAF50', '#8BC34A']}
+                  style={styles.levelBadge}
+                >
+                  <Text style={styles.levelText}>Nv. {userInfo?.Nivel || 1}</Text>
+                </LinearGradient>
+                <Text style={styles.statLabel}>{niveles(userInfo?.Exp)?.insignia}</Text>
               </View>
-            </LinearGradient>
-          </View>
 
-          {/* Sección de Insignias Destacadas */}
-          <View style={styles.sectionContainer}>
+              <View style={styles.statItem}>
+              <FontAwesome5 name="coins" size={24} color="yellow" />
+                <Text style={styles.statValue}>{userInfo?.Monedas || 0}</Text>
+                <Text style={styles.statLabel}>Monedas</Text>
+              </View>
+            </View>
+          </LinearGradient>
+
+          {/* Insignias Section */}
+          <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Insignias Destacadas</Text>
-              <MaterialCommunityIcons
-                name="medal-outline"
-                size={24}
-                color="#4f46e5"
-              />
+              <MaterialCommunityIcons name="medal" size={24} color="white" />
             </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.badgesScroll}
-            >
-              {userInfo?.Insignias?.length > 0 ? (
-                userInfo.Insignias.map((insignias, index) => (
-                  <View key={index} style={styles.badgeCard}>
-                    <MaterialCommunityIcons
-                      name="medal"
-                      size={32}
-                      color="#f59e0b"
-                    />
-                    <Text style={styles.badgeText}>{insignias}</Text>
-                  </View>
-                ))
-              ) : (
-                <View style={styles.emptyBadgeCard}>
-                  <Text style={styles.emptyBadgeText}>
-                    Completa más actividades para ganar insignias 🏆
-                  </Text>
-                </View>
-              )}
-            </ScrollView>
+            
+            {userInfo?.Insignias?.length > 0 ? (
+  <ScrollView 
+    horizontal 
+    showsHorizontalScrollIndicator={false}
+    contentContainerStyle={styles.badgesScroll}
+  >
+    {userInfo.Insignias.map((insignia, index) => (
+      <LinearGradient
+        key={index}
+        colors={['#FFD700', '#D4AF37', '#FFD700']}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={styles.badgeCard}
+      >
+      
+
+        <MaterialCommunityIcons 
+          name="medal" 
+          size={40} 
+          color="#2c2c2c" 
+          style={styles.badgeIcon}
+        />
+        
+        {/* Cinta de la insignia */}
+        <View 
+          style={styles.badgeRibbon}
+        >
+          <Text style={styles.badgeText}>{insignia}</Text>
+        </View>
+      </LinearGradient>
+    ))}
+  </ScrollView>
+
+            ) : (
+              <View style={styles.emptyBadges}>
+                <MaterialCommunityIcons name="medal-outline" size={40} color="rgba(255,255,255,0.5)" />
+                <Text style={styles.emptyBadgesText}>Aún no tienes insignias</Text>
+              </View>
+            )}
           </View>
 
-          {/* Sección Acerca de */}
-          <View style={styles.aboutCard}>
-            <Text style={styles.aboutTitle}>Descripcion</Text>
-            <View style={styles.aboutContent}>
-              <Text style={styles.aboutText}>
-                {userInfo?.Description ||
-                  '¡Hola! Soy un apasionado del aprendizaje continuo y me encanta compartir conocimiento.'}
+          {/* Bio Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Descripción</Text>
+            <View style={styles.bioCard}>
+              <Text style={styles.bioText}>
+                {userInfo?.Description || '¡Completa tu perfil para que otros te conozcan mejor!'}
               </Text>
             </View>
           </View>
         </ScrollView>
       </SafeAreaView>
-    
+    </LinearGradient>
   );
 }
 
-// Componente para cada estadística del perfil
-const StatItem = ({ icon, value, label}) => (
-  <View style={styles.statItem}>
-    <View style={styles.statIcon}>{icon}</View>
-    <Text style={styles.statValue}>{value}</Text>
-    <Text style={styles.statLabel}>{label}</Text>
-    
-  </View>
-);
-
 const styles = StyleSheet.create({
-  menu: {
-    marginTop: 40,
-    borderRadius: 12,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    width: '100%',
-  },
-  menuIcon: {
-    marginRight: 12,
-    color: '#64748b',
-  },
-  menuText: {
-    fontSize: 16,
-    color: '#334155',
-  },
-  safeAreaView: {
+  gradientContainer: {
     flex: 1,
   },
-
-  /* Estilos para la tarjeta de perfil */
-  profileCard: {
-    margin: 16,
-    borderRadius: 20,
-    elevation: 5,
-    overflow: 'hidden',
+  container: {
+    flex: 1,
   },
-  gradient: {
-    padding: 24,
-  },
-  profileHeader: {
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    padding: 20,
   },
-  
-  avatar: {
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: 'white',
-    borderRadius: 50,
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: 'white',
+    fontFamily: 'Inter_700Bold',
   },
-  editIcon: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: '#4f46e5',
+  menuButton: {
+    padding: 8,
     borderRadius: 12,
-    padding: 5,
-    borderWidth: 2,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  content: {
+    paddingBottom: 40,
+  },
+  profileCard: {
+    marginHorizontal: 20,
+    marginBottom: 24,
+    borderRadius: 24,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  avatarContainer: {
+    marginBottom: 20,
+    position: 'relative',
+  },
+  avatar: {
+    borderWidth: 3,
     borderColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+  },
+  avatarText: {
+    fontSize: 48,
+    fontWeight: '600',
+    color: 'white',
   },
 
-  /* Estilos para la sección de estadísticas */
+  userName: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: 'white',
+    marginBottom: 4,
+  },
+  userHandle: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.8)',
+    marginBottom: 20,
+  },
   statsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 24,
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 16,
   },
   statItem: {
     alignItems: 'center',
     flex: 1,
   },
-  statIcon: {
-    backgroundColor: 'white',
-    padding: 8,
-    borderRadius: 25,
-    elevation: 2,
-  },
   statValue: {
+    fontSize: 20,
+    fontWeight: '700',
     color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 8,
+    marginVertical: 8,
   },
   statLabel: {
-    color: '#e5e7eb',
     fontSize: 12,
-    marginTop: 4,
+    color: 'rgba(255,255,255,0.8)',
+    textAlign: 'center',
   },
-  progressContainer: {
-    height: 4,
-    width: 60,
-    backgroundColor: '#e0e7ff',
-    borderRadius: 2,
-    marginTop: 4,
+  levelBadge: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    marginBottom: 8,
   },
-  progressBar: {
-    height: '100%',
-    backgroundColor: '#4f46e5',
-    borderRadius: 2,
+  badgeRibbon: {
+    padding: 5,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.3)',
   },
-  progressText: {
-    color: '#e5e7eb',
-    fontSize: 10,
-    marginTop: 2,
+  levelText: {
+    color: 'white',
+    fontWeight: '700',
+    fontSize: 16,
   },
-  /* Estilos para la sección de insignias */
-  sectionContainer: {
-    marginHorizontal: 16,
-    marginTop: 20,
+  section: {
+    marginHorizontal: 20,
+    marginBottom: 24,
   },
   sectionHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
+    gap: 8,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  badgesScroll: {
-    paddingLeft: 4,
+    fontSize: 20,
+    fontWeight: '600',
+    color: 'white',
   },
   badgeCard: {
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16,
     padding: 16,
-    borderRadius: 12,
     alignItems: 'center',
-    minWidth: 100,
     marginRight: 12,
-    elevation: 2,
+    minWidth: 100,
   },
   badgeText: {
+    color: 'white',
     marginTop: 8,
-    fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
+  },
+  emptyBadges: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyBadgesText: {
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 12,
     textAlign: 'center',
-    color: '#333',
   },
-  emptyBadgeCard: {
+  bioCard: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16,
     padding: 16,
-    borderRadius: 12,
-    backgroundColor: '#e0f2fe',
-    elevation: 2,
   },
-  emptyBadgeText: {
+  bioText: {
+    color: 'rgba(255,255,255,0.9)',
     fontSize: 14,
-    color: '#0369a1',
-  },
-  /* Estilos para la sección "Acerca de" */
-  aboutCard: {
-    margin: 16,
-    borderRadius: 12,
-    elevation: 3,
-    backgroundColor: 'white',
-  },
-  aboutTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  aboutContent: {
-    padding: 16,
-  },
-  aboutText: {
-    fontSize: 14,
-    color: '#555',
-    lineHeight: 20,
+    lineHeight: 22,
   },
 });

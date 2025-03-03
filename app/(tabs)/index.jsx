@@ -102,7 +102,13 @@ export default function AppComponent() {
                 <Avatar
                   size={60}
                   rounded
-                  source={require('../../assets/images/Loader.png')}
+                  // title={userAuthenticated?.Name?.charAt(0)}
+                  {
+                    ...userAuthenticated?.FotoPerfil 
+                      ? { source: { uri: userAuthenticated.FotoPerfil } }
+                      : { title: userAuthenticated?.Name.charAt(0) } 
+                  }
+                  avatarStyle={{ borderWidth: 1, borderColor: '#fff' }}
                 />
                 <View style={styles.userInfo}>
                   <Text style={styles.greeting}>

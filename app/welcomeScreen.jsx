@@ -1,13 +1,44 @@
-import React, { useRef } from 'react';
-import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, Dimensions, ScrollView, Animated } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, StatusBar, PanResponder } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+import { Button } from 'react-native-web';
 
 const WelcomeScreen = () => {
   const navigation = useNavigation();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
+  const featureSlide = useRef(new Animated.Value(0)).current;
+  const [currentFeatureIndex, setCurrentFeatureIndex] = useState(0);
+  const { width } = Dimensions.get('window');
+
+  const features = [
+    { icon: '📖', title: 'Planes Estructurados', desc: 'Seguimiento progresivo de estudios bíblicos para profundizar en tu conocimiento día a día.' },
+    { icon: '✝️', title: 'Análisis Profundo', desc: 'Desglose detallado de versículos clave que te ayudarán a comprender el mensaje divino.' },
+    { icon: '🕊️', title: 'Devocionales', desc: 'Crea reflexiones personalizadas para fortalecer tu relación con Dios a través de la meditación diaria.' },
+    { icon: '🎓', title: 'Cuestionarios', desc: 'Refuerza tu aprendizaje con ejercicios interactivos diseñados para consolidar tu conocimiento bíblico.' },
+  ];
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderRelease: (evt, gestureState) => {
+        if (Math.abs(gestureState.dx) > 50) {
+          if (gestureState.dx > 0) {
+            handleNavigation('previous');
+          } else {
+            handleNavigation('next');
+          }
+        } else {
+          Animated.spring(featureSlide, {
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+    })
+  ).current;
 
   React.useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -17,12 +48,33 @@ const WelcomeScreen = () => {
     }).start();
   }, [fadeAnim]);
 
-  const features = [
-    { icon: '📖', title: 'Planes Estructurados', desc: 'Seguimiento progresivo de estudios bíblicos' },
-    { icon: '✝️', title: 'Análisis Profundo', desc: 'Desglose detallado de versículos clave' },
-    { icon: '🕊️', title: 'Devocionales', desc: 'Crea reflexiones personalizadas' },
-    { icon: '🎓', title: 'Cuestionarios', desc: 'Refuerza tu aprendizaje interactivo' },
-  ];
+  const handleNavigation = (direction) => {
+    if (direction === 'next' && currentFeatureIndex === features.length - 1) {
+      navigation.navigate('(tabs)');
+      return;
+    }
+
+    const newIndex = direction === 'next' ? currentFeatureIndex + 1 : currentFeatureIndex - 1;
+    if (newIndex < 0 || newIndex >= features.length) return;
+
+    const slideValue = direction === 'next' ? -width : width;
+    
+    Animated.parallel([
+      Animated.timing(featureSlide, {
+        toValue: slideValue,
+        duration: 300,
+        useNativeDriver: true,
+      })
+    ]).start(() => {
+      setCurrentFeatureIndex(newIndex);
+      featureSlide.setValue(direction === 'next' ? width : -width);
+      Animated.timing(featureSlide, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
 
   const handlePressIn = () => {
     Animated.spring(buttonScale, {
@@ -38,81 +90,116 @@ const WelcomeScreen = () => {
     }).start();
   };
 
+  const isLastFeature = currentFeatureIndex === features.length - 1;
+  const isFirstFeature = currentFeatureIndex === 0;
+
   return (
     <LinearGradient
-      colors={['#f8fbff', '#e1f3ff']}
+      colors={['#f0f7ff', '#d6ebff']}
       style={styles.container}
     >
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <Animated.View style={{ opacity: fadeAnim }}>
-          <LottieView
-            source={require('../assets/lottieFiles/greeting.json')}
-            autoPlay
-            loop
-            style={styles.animation}
-          />
-        </Animated.View>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      
+      <Animated.View style={[styles.headerContainer, { opacity: fadeAnim }]}>
+        <LottieView
+          source={require('../assets/lottieFiles/greeting.json')}
+          autoPlay
+          loop
+          style={styles.animation}
+        />
+        
+        <Text style={styles.title}>Sumérgete en las Escrituras</Text>
+        <Text style={styles.subtitle}>
+          Tu camino hacia una comprensión más profunda de la Palabra de Dios
+        </Text>
+      </Animated.View>
 
-        <Animated.View style={{ opacity: fadeAnim }}>
-          <Text style={styles.title}>Sumérgete en las Escrituras</Text>
-          <Text style={styles.subtitle}>
-            Tu camino hacia una comprensión más profunda de la Palabra de Dios
-          </Text>
-        </Animated.View>
-
-        <View style={styles.divider} />
-
-        <View style={styles.featuresContainer}>
-          {features.map((item, index) => (
-            <Animated.View 
-              key={index} 
-              style={[styles.featureCard, { 
-                opacity: fadeAnim,
-                transform: [{
-                  translateY: fadeAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [50, 0]
-                  })
-                }]
-              }]}
-            >
-              <View style={styles.iconContainer}>
-                <Text style={styles.featureIcon}>{item.icon}</Text>
-              </View>
-              <Text style={styles.featureTitle}>{item.title}</Text>
-              <Text style={styles.featureDesc}>{item.desc}</Text>
-            </Animated.View>
-          ))}
-        </View>
-
+      <View style={styles.carouselContainer}>
         <Animated.View 
-          style={{ 
-            transform: [{ scale: buttonScale }],
-            opacity: fadeAnim
-          }}
+          {...panResponder.panHandlers}
+          style={[
+            styles.featureCard, 
+            { transform: [{ translateX: featureSlide }] }
+          ]}
         >
-          <TouchableOpacity 
-            onPress={() => navigation.navigate('(tabs)')}
-            activeOpacity={0.9}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
+          <LinearGradient
+            colors={['#FFFFFF', '#F8FBFF']}
+            style={styles.gradientCard}
           >
-            <LinearGradient
-              colors={['#5D9DE6', '#3B71C3']}
-              style={styles.button}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <Text style={styles.buttonText}>Empezar Ahora</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+            <View style={styles.featureContent}>
+              <LinearGradient
+                colors={['#6AA3FF', '#4B8AE6']}
+                style={styles.iconContainer}
+              >
+                <Text style={styles.featureIcon}>{features[currentFeatureIndex].icon}</Text>
+              </LinearGradient>
+              <Text style={styles.featureTitle}>{features[currentFeatureIndex].title}</Text>
+              <Text style={styles.featureDesc}>{features[currentFeatureIndex].desc}</Text>
+            </View>
+            
+            <View style={styles.indicatorContainer}>
+              {features.map((_, index) => (
+                <View 
+                  key={index} 
+                  style={[
+                    styles.indicator, 
+                    index === currentFeatureIndex && styles.activeIndicator
+                  ]} 
+                />
+              ))}
+            </View>
+          </LinearGradient>
         </Animated.View>
+        
+        <View style={styles.buttonsContainer}>
+          {!isLastFeature ? (
+            <View style={styles.navigationButtons}>
+              {!isFirstFeature && (
+                <Button 
+                  style={[styles.navButton, styles.prevButton]}
+                  onPress={() => handleNavigation('previous')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.navButtonText}>Anterior</Text>
+                </Button>
+              )}
+              
+              <TouchableOpacity 
+                style={[styles.navButton, styles.nextButton]}
+                onPress={() => handleNavigation('next')}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.navButtonText}>Siguiente</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <Animated.View 
+              style={{ 
+                transform: [{ scale: buttonScale }],
+                width: '100%'
+              }}
+            >
+              <TouchableOpacity 
+                onPress={() => navigation.navigate('(tabs)')}
+                activeOpacity={0.9}
+                onPressIn={handlePressIn}
+                onPressOut={handlePressOut}
+              >
+                <LinearGradient
+                  colors={['#5D9DE6', '#3B71C3']}
+                  style={styles.mainButton}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text style={styles.buttonText}>Empezar Ahora</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </Animated.View>
+          )}
+        </View>
+      </View>
 
-        <Text style={styles.footerText}>Únete a miles de creyentes en esta jornada espiritual</Text>
-      </ScrollView>
+      <Text style={styles.footerText}>Únete a miles de creyentes en esta jornada espiritual</Text>
     </LinearGradient>
   );
 };
@@ -122,94 +209,137 @@ const { width, height } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    justifyContent: 'space-between',
+    paddingTop: StatusBar.currentHeight || 40,
+    paddingBottom: 30,
   },
-  scrollContent: {
-    flexGrow: 1,
-    padding: 25,
-    paddingTop: height * 0.02,
+  headerContainer: {
+    alignItems: 'center',
+    paddingHorizontal: 25,
   },
   animation: {
-    width: width * 0.9,
-    height: 280,
+    width: width * 0.8,
+    height: 220,
     alignSelf: 'center',
-    marginBottom: 10,
   },
   title: {
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: '800',
     color: '#1A3E5A',
     textAlign: 'center',
     fontFamily: 'Poppins-Bold',
-    lineHeight: 40,
-    marginBottom: 15,
+    lineHeight: 38,
+    marginBottom: 12,
     textShadowColor: 'rgba(26, 62, 90, 0.1)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 17,
     color: '#5A7C95',
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 25,
     fontFamily: 'Poppins-Medium',
-    lineHeight: 26,
+    lineHeight: 24,
     paddingHorizontal: 20,
   },
-  divider: {
-    height: 3,
-    width: 60,
-    backgroundColor: '#5D9DE6',
-    alignSelf: 'center',
-    marginBottom: 35,
-    borderRadius: 5,
-  },
-  featuresContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 30,
+  carouselContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 25,
   },
   featureCard: {
-    width: '48%',
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 15,
+    width: '100%',
+    borderRadius: 25,
     shadowColor: '#3B71C3',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 15,
-    elevation: 5,
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  gradientCard: {
+    borderRadius: 25,
+    padding: 25,
+    minHeight: height * 0.3,
+    justifyContent: 'space-between',
+  },
+  featureContent: {
     alignItems: 'center',
   },
   iconContainer: {
-    backgroundColor: '#EFF6FF',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 20,
+    elevation: 3,
   },
   featureIcon: {
-    fontSize: 30,
+    fontSize: 40,
+    color: 'white',
   },
   featureTitle: {
-    fontSize: 17,
+    fontSize: 24,
     color: '#1A3E5A',
     fontFamily: 'Poppins-SemiBold',
-    marginBottom: 8,
+    marginBottom: 15,
     textAlign: 'center',
   },
   featureDesc: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#6A889C',
     fontFamily: 'Poppins-Regular',
-    lineHeight: 20,
+    lineHeight: 24,
     textAlign: 'center',
   },
-  button: {
-    paddingVertical: 20,
+  indicatorContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 30,
+  },
+  indicator: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#D9E8F5',
+    marginHorizontal: 5,
+  },
+  activeIndicator: {
+    backgroundColor: '#5D9DE6',
+    width: 20,
+  },
+  buttonsContainer: {
+    marginTop: 30,
+    alignItems: 'center',
+  },
+  navigationButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  navButton: {
+    paddingVertical: 15,
+    paddingHorizontal: 25,
+    borderRadius: 30,
+    shadowColor: '#3B71C3',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  prevButton: {
+    backgroundColor: '#EFF6FF',
+  },
+  nextButton: {
+    backgroundColor: '#5D9DE6',
+  },
+  navButtonText: {
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  mainButton: {
+    paddingVertical: 18,
     borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
@@ -217,22 +347,21 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 15,
-    marginHorizontal: 20,
+    elevation: 8,
   },
   buttonText: {
     color: 'white',
-    fontSize: 19,
+    fontSize: 18,
     fontFamily: 'Poppins-Bold',
     letterSpacing: 0.8,
-    includeFontPadding: false,
   },
   footerText: {
     fontSize: 13,
     color: '#8FA8B7',
     textAlign: 'center',
-    marginTop: 25,
-    marginBottom: 20,
+    marginTop: 20,
     fontFamily: 'Poppins-Italic',
+    paddingHorizontal: 25,
   },
 });
 

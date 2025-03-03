@@ -42,8 +42,6 @@ const EditProfileScreen = () => {
   }, [user]);
 
   const handleUpdate = async () => {
-    
-   
 
     try {
       setLoading(true);
@@ -66,7 +64,7 @@ const EditProfileScreen = () => {
       });
   
       if (!result.canceled) {
-        console.log(result);
+        console.log('foto subida');
       } else {
         alert('You did not select any image.');
       }
@@ -74,6 +72,12 @@ const EditProfileScreen = () => {
       if (!result.canceled) {
         setFormData({ ...formData, FotoPerfil: result.assets[0].uri });
       }
+      // tambien se puede quita la imagen selecionada de la siguiente forma 
+
+  };
+
+  const removeImage = () => {
+    setFormData({ ...formData, FotoPerfil: null });
   };
 
   return (
@@ -99,28 +103,37 @@ const EditProfileScreen = () => {
       </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <Pressable onPress={pickImage}>
-          {formData.FotoPerfil ? (
-            <Avatar
-              rounded
-              source={{ uri: formData.FotoPerfil }}
-              size="xlarge"
-              />
-
-
-          ) : (
-            <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{formData.Name.toUpperCase().slice(0, 1)} </Text>
-            </View>
-          )
-        
-        }
-          <View style={styles.editIcon}>
-        
-            <AntDesign name="camera" size={20} color="white" />
-             
-          </View>
-        </Pressable>
+       <Pressable onPress={pickImage}>
+  <View style={styles.avatarContainer}>
+    {formData.FotoPerfil ? (
+      <Avatar
+        rounded
+        source={{ uri: formData.FotoPerfil }}
+        size="xlarge"
+      />
+    ) : (
+      <View style={styles.avatar}>
+        <Text style={styles.avatarText}>
+          {formData.Name.toUpperCase().slice(0, 1)}
+        </Text>
+      </View>
+    )}
+    
+    {/* Botón para eliminar foto */}
+    {formData.FotoPerfil && (
+      <Pressable 
+        style={styles.deleteButton} 
+        onPress={removeImage}
+      >
+        <AntDesign name="closecircle" size={30} color="red" />
+      </Pressable>
+    )}
+    
+    <View style={styles.editIcon}>
+      <AntDesign name="camera" size={20} color="white" />
+    </View>
+  </View>
+</Pressable>
 
         <View style={styles.formGroup}>
           <Text style={styles.label}>Nombre Completo</Text>
@@ -188,7 +201,21 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
   },
- 
+ avatarContainer: {
+  position: 'relative',
+  marginBottom: 20,
+  
+},
+deleteButton: {
+  position: 'absolute',
+  bottom: 5,
+  left: 5,
+  backgroundColor: 'white',
+  borderRadius: 15,
+  zIndex: 1,
+  borderWidth: 2,
+  borderColor: 'white',
+},
   avatar: {
     width: 150,
     height: 150,
