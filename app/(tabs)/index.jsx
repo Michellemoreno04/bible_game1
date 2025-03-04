@@ -1,6 +1,6 @@
-import { Text, View, StyleSheet, SafeAreaView, ScrollView, Alert, ActivityIndicator, Image } from 'react-native';
+import { Text, View, StyleSheet, SafeAreaView, ScrollView, ActivityIndicator, } from 'react-native';
 import '../../global.css';
-import { FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
+import { FontAwesome5 } from '@expo/vector-icons';
 import useAuth from '../../components/authContext/authContext';
 import React, { useEffect, useState } from 'react';
 import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
@@ -52,6 +52,7 @@ export default function AppComponent() {
     return () => unsubscribe();
   }, [userId]);
 
+  // Guardar insignia en la base de datos
   useEffect(() => {
     const guardarInsignia = async () => {
       if (!userAuthenticated.Exp) return;
@@ -102,11 +103,10 @@ export default function AppComponent() {
                 <Avatar
                   size={60}
                   rounded
-                  // title={userAuthenticated?.Name?.charAt(0)}
                   {
                     ...userAuthenticated?.FotoPerfil 
                       ? { source: { uri: userAuthenticated.FotoPerfil } }
-                      : { title: userAuthenticated?.Name.charAt(0) } 
+                      : { title: userAuthenticated?.Name?.charAt(0) } 
                   }
                   avatarStyle={{ borderWidth: 1, borderColor: '#fff' }}
                 />

@@ -2,7 +2,7 @@
 
 # Cosas pendientes
 1. Guardar las versiculos con todo e imagen
-2. usar variables locales para guardar keys 
+2. 
 3. mejorar el audio de lecturas
 4. 
 5. Hacer el saveAreView para android
@@ -16,4 +16,5 @@
 
 # Cosas Hechas
 
-
+1. usar variables locales para guardar keys 
+2. google sign in con firebase (aun los datos no se guardan en firestore)
