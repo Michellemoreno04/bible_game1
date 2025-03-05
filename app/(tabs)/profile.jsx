@@ -16,6 +16,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../components/firebase/firebaseConfig';
 import { niveles } from '@/components/Niveles/niveles';
 import { Avatar, Icon } from '@rneui/themed';
+import {InsigniasComponent} from '@/components/insigniasComponents/insigniasComponents';
 
 export default function Profile() {
   const navigation = useNavigation();
@@ -113,38 +114,9 @@ export default function Profile() {
             </View>
             
             {userInfo?.Insignias?.length > 0 ? (
-  <ScrollView 
-    horizontal 
-    showsHorizontalScrollIndicator={false}
-    contentContainerStyle={styles.badgesScroll}
-  >
-    {userInfo.Insignias.map((insignia, index) => (
-      <LinearGradient
-        key={index}
-        colors={['#FFD700', '#D4AF37', '#FFD700']}
-        start={{ x: 0.1, y: 0 }}
-        end={{ x: 0.9, y: 1 }}
-        style={styles.badgeCard}
-      >
-      
+              console.log('Insignias:', userInfo.Insignias),
 
-        <MaterialCommunityIcons 
-          name="medal" 
-          size={40} 
-          color="#2c2c2c" 
-          style={styles.badgeIcon}
-        />
-        
-        {/* Cinta de la insignia */}
-        <View 
-          style={styles.badgeRibbon}
-        >
-          <Text style={styles.badgeText}>{insignia}</Text>
-        </View>
-      </LinearGradient>
-    ))}
-  </ScrollView>
-
+                <InsigniasComponent userInfo={userInfo.Insignias} />
             ) : (
               <View style={styles.emptyBadges}>
                 <MaterialCommunityIcons name="medal-outline" size={40} color="rgba(255,255,255,0.5)" />
@@ -285,19 +257,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: 'white',
   },
-  badgeCard: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    marginRight: 12,
-    minWidth: 100,
-  },
-  badgeText: {
-    color: 'white',
-    marginTop: 8,
-    fontWeight: '500',
-  },
+ 
   emptyBadges: {
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 16,

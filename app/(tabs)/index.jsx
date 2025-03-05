@@ -131,7 +131,7 @@ export default function AppComponent() {
             <VersiculosDiarios />
             <ExploraComponent />
             <GuardadosComponents />
-            <ShareButton />
+           
           </View>
         </ScrollView>
       </SafeAreaView>

@@ -2,13 +2,18 @@
 
 # dependencies
 node_modules/
-
+google-services.json
 # Expo
 .expo/
 dist/
 web-build/
 expo-env.d.ts
 .env
+
+
+
+
+
 
 # Native
 *.orig.*
