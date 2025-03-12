@@ -10,7 +10,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import { AuthProvider } from "../components/authContext/authContext";
-
+import { ToastProvider } from 'react-native-toast-notifications'
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -48,7 +48,7 @@ export default function RootLayout() {
   };
 
   return (
-    
+    <ToastProvider>
       <AuthProvider>
        
           <Stack screenOptions={{ headerShown: true }}>
@@ -147,6 +147,6 @@ export default function RootLayout() {
           <StatusBar style="auto" />
         
       </AuthProvider>
-   
+      </ToastProvider>
   );
 }

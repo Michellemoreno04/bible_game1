@@ -14,6 +14,8 @@
 #include <react/renderer/components/lottiereactnative/ComponentDescriptors.h>
 #include <rngesturehandler_codegen.h>
 #include <react/renderer/components/rngesturehandler_codegen/ComponentDescriptors.h>
+#include <RNGoogleMobileAdsSpec.h>
+#include <react/renderer/components/RNGoogleMobileAdsSpec/ComponentDescriptors.h>
 #include <rnreanimated.h>
 #include <safeareacontext.h>
 #include <react/renderer/components/safeareacontext/ComponentDescriptors.h>
@@ -43,6 +45,10 @@ return module_lottiereactnative;
 auto module_rngesturehandler_codegen = rngesturehandler_codegen_ModuleProvider(moduleName, params);
 if (module_rngesturehandler_codegen != nullptr) {
 return module_rngesturehandler_codegen;
+}
+auto module_RNGoogleMobileAdsSpec = RNGoogleMobileAdsSpec_ModuleProvider(moduleName, params);
+if (module_RNGoogleMobileAdsSpec != nullptr) {
+return module_RNGoogleMobileAdsSpec;
 }
 auto module_rnreanimated = rnreanimated_ModuleProvider(moduleName, params);
 if (module_rnreanimated != nullptr) {
@@ -81,6 +87,9 @@ providerRegistry->add(concreteComponentDescriptorProvider<RNGoogleSigninButtonCo
 providerRegistry->add(concreteComponentDescriptorProvider<LottieAnimationViewComponentDescriptor>());
 providerRegistry->add(concreteComponentDescriptorProvider<RNGestureHandlerButtonComponentDescriptor>());
 providerRegistry->add(concreteComponentDescriptorProvider<RNGestureHandlerRootViewComponentDescriptor>());
+providerRegistry->add(concreteComponentDescriptorProvider<RNGoogleMobileAdsBannerViewComponentDescriptor>());
+providerRegistry->add(concreteComponentDescriptorProvider<RNGoogleMobileAdsMediaViewComponentDescriptor>());
+providerRegistry->add(concreteComponentDescriptorProvider<RNGoogleMobileAdsNativeViewComponentDescriptor>());
 providerRegistry->add(concreteComponentDescriptorProvider<RNCSafeAreaProviderComponentDescriptor>());
 providerRegistry->add(concreteComponentDescriptorProvider<RNCSafeAreaViewComponentDescriptor>());
 providerRegistry->add(concreteComponentDescriptorProvider<RNSFullWindowOverlayComponentDescriptor>());

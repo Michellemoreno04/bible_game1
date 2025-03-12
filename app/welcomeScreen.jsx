@@ -20,26 +20,6 @@ const WelcomeScreen = () => {
     { icon: '🎓', title: 'Cuestionarios', desc: 'Refuerza tu aprendizaje con ejercicios interactivos diseñados para consolidar tu conocimiento bíblico.' },
   ];
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onPanResponderRelease: (evt, gestureState) => {
-        if (Math.abs(gestureState.dx) > 50) {
-          if (gestureState.dx > 0) {
-            handleNavigation('previous');
-          } else {
-            handleNavigation('next');
-          }
-        } else {
-          Animated.spring(featureSlide, {
-            toValue: 0,
-            useNativeDriver: true,
-          }).start();
-        }
-      },
-    })
-  ).current;
-
   React.useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -116,7 +96,6 @@ const WelcomeScreen = () => {
 
       <View style={styles.carouselContainer}>
         <Animated.View 
-          {...panResponder.panHandlers}
           style={[
             styles.featureCard, 
             { transform: [{ translateX: featureSlide }] }
@@ -155,13 +134,13 @@ const WelcomeScreen = () => {
           {!isLastFeature ? (
             <View style={styles.navigationButtons}>
               {!isFirstFeature && (
-                <Button 
+                <TouchableOpacity 
                   style={[styles.navButton, styles.prevButton]}
                   onPress={() => handleNavigation('previous')}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.navButtonText}>Anterior</Text>
-                </Button>
+                  <Text style={[styles.navButtonText, { color: '#5D9DE6' }]}>Anterior</Text>
+                </TouchableOpacity>
               )}
               
               <TouchableOpacity 
@@ -169,7 +148,7 @@ const WelcomeScreen = () => {
                 onPress={() => handleNavigation('next')}
                 activeOpacity={0.7}
               >
-                <Text style={styles.navButtonText}>Siguiente</Text>
+                <Text style={[styles.navButtonText, { color: 'white' }]}>Siguiente</Text>
               </TouchableOpacity>
             </View>
           ) : (

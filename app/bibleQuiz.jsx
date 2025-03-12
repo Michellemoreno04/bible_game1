@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ImageBackground } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ImageBackground, Animated,Platform } from 'react-native';
 import { AntDesign, FontAwesome5, MaterialCommunityIcons, Octicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { doc, updateDoc, onSnapshot, getDocs, collection, limit, query, getDoc,arrayUnion, Timestamp, orderBy, startAfter, serverTimestamp, increment, setDoc } from 'firebase/firestore';
+import { doc, updateDoc, onSnapshot, getDocs, collection, limit, query, orderBy, startAfter, serverTimestamp, increment, setDoc } from 'firebase/firestore';
 import useAuth from '../components/authContext/authContext';
 import { db } from '../components/firebase/firebaseConfig';
 import { ModalPuntuacion } from '@/components/Modales/modalPuntuacion';
@@ -15,6 +15,15 @@ import { useBackgroundMusic } from '@/components/soundFunctions/soundFunction';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NivelModal from '@/components/Modales/modalNivel';
 import { niveles } from '@/components/Niveles/niveles';
+import { InterstitialAd, AdEventType, TestIds } from 'react-native-google-mobile-ads';
+
+
+const adUnitId = __DEV__ ? TestIds.INTERSTITIAL: process.env.EXPO_PUBLIC_INTERSTITIAL_ID; 
+
+// Crea la instancia del anuncio
+const interstitial = InterstitialAd.createForAdRequest(adUnitId, {
+  keywords: ['religion', 'bible']// esto es para anuncios personalizados
+});
 
 
 const BibleQuiz = () => {
@@ -36,9 +45,65 @@ const BibleQuiz = () => {
   const [preguntasRespondidas, setPreguntasRespondidas] = useState([]);
   const [showNivelModal, setShowNivelModal] = useState(false);
   const [lastDoc, setLastDoc] = useState([]);
+  const [interstitialLoaded, setInternitialLoaded] = useState(false);
   const { user } = useAuth();
   const userId = user?.uid;
 
+
+
+// Cargar el anuncio
+  useEffect(() => {
+    try {
+      const unsubscribeLoaded = interstitial.addAdEventListener(AdEventType.LOADED, () => {
+        setInternitialLoaded(true);
+      });
+  
+      const unsubscribeOpened = interstitial.addAdEventListener(AdEventType.OPENED, () => {
+        if (Platform.OS === 'ios') {
+          // Prevent the close button from being unreachable by hiding the status bar on iOS
+          StatusBar.setHidden(true)
+        }
+      });
+  
+      const unsubscribeClosed = interstitial.addAdEventListener(AdEventType.CLOSED, () => {
+        if (Platform.OS === 'ios') {
+          StatusBar.setHidden(false)
+        }
+      });
+  
+      // Start loading the interstitial straight away
+      interstitial.load();
+ 
+      console.log('interstitial cargado')
+
+    // Unsubscribe from events on unmount
+    return () => {
+      unsubscribeLoaded();
+      unsubscribeOpened();
+      unsubscribeClosed();
+    };
+  } catch (error) {
+    console.log(error)
+        }
+  }, []);
+
+  // mostrar los anuncios
+  const showAds = () => {
+    if(interstitialLoaded){
+      interstitial.show();
+
+      interstitial.addAdEventListener(AdEventType.CLOSED, () => {
+        
+        navigation.navigate('(tabs)'); // Redirigir a Home después de cerrar el anuncio
+        // showModal(false);
+      });
+
+    } else {
+      navigation.navigate('(tabs)'); // Si no hay anuncio, ir a Home directamente
+    }
+
+    
+  }
 
   // Verifica el nivel del usuario para mostrar el modal de nivel  
  useEffect(() => {
@@ -140,7 +205,11 @@ const BibleQuiz = () => {
   const textoBiblico = questions[currentQuestion]?.bibleText;
   const correcta = questions[currentQuestion]?.correctAnswer;
   const respuestas = questions[currentQuestion]?.answers || [];
-
+ // Animaciones
+ const questionOpacity = useRef(new Animated.Value(0)).current;
+ const [answerAnimations, setAnswerAnimations] = useState(
+   respuestas.map(() => new Animated.Value(0))
+ );
 // Función optimizada para marcar como respondida
 const marcarPreguntaRespondida = async (questionId, questionIndex) => {
   if (!questionId || !user?.uid) return;
@@ -224,7 +293,7 @@ useEffect(() => {
       setTimeout(async () => {
         const userDocRef = doc(db, 'users', userId);
 
-        if (userInfo.Vidas > 0) {
+        if (userInfo.Vidas >= 1) { 
           try {
             await updateDoc(userDocRef, {
               Vidas: userInfo.Vidas - 1,
@@ -293,6 +362,7 @@ useEffect(() => {
       setShowModal(true);
     }
   };
+
 
   // Función para "remover dos respuestas incorrectas"
   const removeTwo = async () => {
@@ -371,32 +441,74 @@ useEffect(() => {
     return;
   }
 
+
+// Animaciones
+  useEffect(() => {
+    // Reiniciar animaciones cuando cambia la pregunta
+    questionOpacity.setValue(0);
+    const newAnimations = respuestas.map(() => new Animated.Value(0));
+    setAnswerAnimations(newAnimations);
+
+    // Animación para la pregunta
+    Animated.timing(questionOpacity, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start(() => {
+      // Animación para respuestas después de 2 segundos
+      setTimeout(() => {
+        newAnimations.forEach((anim, index) => {
+          Animated.timing(anim, {
+            toValue: 1,
+            duration: 500,
+            delay: index * 200,
+            useNativeDriver: true,
+          }).start();
+        });
+      }, 2000);
+    });
+  }, [pregunta]);
+
+  if (!interstitial) {
+    return null;
+  } 
+
   return (
-    <SafeAreaView>
-      <ModalPuntuacion userInfo={userInfo} expGanada={expGanada} monedasGanadas={monedasGanadas} respuestasCorrectas={resultadoRespuestas} isVisible={showModal} onClose={mostrarModalRacha} />
+    <SafeAreaView style={styles.safeArea}>
+      <ModalPuntuacion userInfo={userInfo} expGanada={expGanada} monedasGanadas={monedasGanadas} respuestasCorrectas={resultadoRespuestas} isVisible={showModal} onClose={mostrarModalRacha} showAds={showAds} />
       <ModalRacha userInfo={userInfo} isVisible={showModalRacha} setShowModalRacha={setShowModalRacha} />
       <ModalRachaPerdida userInfo={userInfo} isVisible={showModalRachaPerdida} setShowModalRachaPerdida={setShowModalRachaPerdida} />
       <NivelModal Exp={userInfo.Exp} nivel={userInfo?.Nivel} isVisible={showNivelModal} onClose={() => setShowNivelModal(false)}/>
 
         
-      <ImageBackground source={require('../assets/images/bg-quiz.png')} resizeMode="cover" style={styles.backgroundImage}>
-        <View className='w-full h-full flex items-center '>
-          <View className='w-full flex flex-row justify-between items-center '>
-            <TouchableOpacity onPress={salir}>
-              <MaterialCommunityIcons name="home" color="blue" size={40} className=' w-10 h-10 ml-5' />
+<ImageBackground 
+        source={require('../assets/images/bg-quiz.png')} 
+         resizeMode="cover" 
+        style={styles.backgroundImage}
+      >
+        <View style={styles.mainContainer}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={salir} style={styles.homeButton}>
+              <MaterialCommunityIcons 
+                name="home" 
+                color="blue" 
+                size={40} 
+                style={styles.homeIcon} 
+              />
             </TouchableOpacity>
 
             <View style={styles.statusBar}>
               <AntDesign name="heart" size={24} color="red" />
-              <Text style={styles.status}>{userInfo.Vidas}</Text>
+              <Text style={styles.statusText}>{userInfo.Vidas}</Text>
               <FontAwesome5 name="coins" size={24} color="yellow" />
-              <Text style={styles.status}>{userInfo.Monedas}</Text>
+              <Text style={styles.statusText}>{userInfo.Monedas}</Text>
             </View>
+
           </View>
 
-          <View className='w-full h-[90%] rounded-md flex items-center p-5 '>
-            <View className='w-full flex flex-row justify-end '>
-              <TouchableOpacity onPress={toggleMute} style={styles.iconButton}>
+          <View style={styles.contentContainer}>
+            <View style={styles.muteButtonContainer}>
+              <TouchableOpacity onPress={toggleMute}>
                 <Octicons
                   name={isMuted ? 'mute' : 'unmute'}
                   size={24}
@@ -405,64 +517,71 @@ useEffect(() => {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.questionContainer} className="w-full h-52 rounded-md mb-5 mt-5 flex items-center justify-center p-2">
-              <Text
-                className="text-white rounded-md p-3 absolute top-0 left-0 "
-                onPress={showTextoBiblico}
-              >
-                {referencia}
-              </Text>
-              <Text className="text-3xl font-bold text-white">{pregunta}</Text>
-            </View>
+            <Animated.View style={[styles.questionContainer, { opacity: questionOpacity }]}>
+            <Text
+              style={styles.referenceText}
+              onPress={showTextoBiblico}
+            >
+              {referencia}
+            </Text>
+            <Text style={styles.questionText}>{pregunta}</Text>
+          </Animated.View>
 
-            <View className='w-full flex flex-col items-center'>
-              {respuestas.map((respuesta, index) => (
-                <TouchableOpacity
+
+            <View style={styles.answersContainer}>
+              {respuestas.map((respuesta, index) => {
+                const isSelected = respuestaSeleccionada === respuesta;
+                const isCorrect = mostrarRespuestaCorrecta && respuesta === correcta;
+                const isIncorrect = mostrarRespuestaCorrecta && respuesta !== correcta;
+                
+                return (
+                  <Animated.View
                   key={index}
-                  style={styles.respuestas}
-                  className={`w-full h-16 rounded-md flex items-center justify-center m-1 ${
-                    respuestaSeleccionada === respuesta
-                      ? 'border-4 border-green-500'
-                      : mostrarRespuestaCorrecta && respuesta === correcta
-                      ? 'border-2 border-green-500'
-                      : 'border-2 border-gray-400'
-                  } ${
-                    mostrarRespuestaCorrecta && respuesta !== correcta
-                      ? 'border-2 border-red-500'
-                      : ''
-                  }`}
-                  onPress={() => setRespuestaSeleccionada(respuesta)}
-                  disabled={mostrarRespuestaCorrecta}
+                  style={{ opacity: answerAnimations[index] || 0 }}
                 >
-                  <Text className='text-2xl text-white font-bold'>{respuesta}</Text>
-                </TouchableOpacity>
-              ))}
+                  <TouchableOpacity
+                    style={[
+                      styles.answerButton,
+                      isSelected && styles.selectedAnswer,
+                      isCorrect && styles.correctAnswer,
+                      isIncorrect && styles.incorrectAnswer
+                    ]}
+                    onPress={() => setRespuestaSeleccionada(respuesta)}
+                    disabled={mostrarRespuestaCorrecta}
+                  >
+                    <Text style={styles.answerText}>{respuesta}</Text>
+                  </TouchableOpacity>
+                </Animated.View>
+                )
+              })}
             </View>
 
             <TouchableOpacity
-              style={styles.comprobar}
-              className='w-52 h-16 rounded-md flex items-center justify-center flex-row gap-2 m-5'
+              style={styles.checkButton}
               onPress={comprobarRespuesta}
             >
-              <Text className='text-2xl font-bold text-white'>Comprobar</Text>
+              <Text style={styles.checkButtonText}>Comprobar</Text>
               <AntDesign name="rightcircleo" size={24} color="white" />
             </TouchableOpacity>
 
-            <View className='w-full flex flex-row items-center justify-center gap-2'>
+            <View style={styles.actionsContainer}>
               <TouchableOpacity
                 onPress={skip}
-                className='w-56 h-20 bg-red-500 rounded-md flex items-center justify-center '
+                style={styles.actionButton}
               >
-                <Text className='color-white'>💰{'50'}</Text>
-                <Text className='color-white font-bold'>Saltar</Text>
+                <Text style={styles.actionText}>💰50</Text>
+                <Text style={styles.actionText}>Saltar</Text>
               </TouchableOpacity>
+              
               <TouchableOpacity
-                className='w-56 h-20 bg-red-500 rounded-md flex items-center justify-center'
+                style={[styles.actionButton, respuestas.length <= 2 && styles.disabledButton]}
                 onPress={removeTwo}
                 disabled={respuestas.length <= 2}
               >
-                <Text className='color-white'>💰{'50'}</Text>
-                <Text className='color-white font-bold'>{respuestas.length > 2 ? 'Remover 2 incorrectas' : 'No disponible'}</Text>
+                <Text style={styles.actionText}>💰50</Text>
+                <Text style={styles.actionText}>
+                  {respuestas.length > 2 ? 'Remover 2 incorrectas' : 'No disponible'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -473,32 +592,155 @@ useEffect(() => {
 };
 
 const styles = StyleSheet.create({
-  questionContainer: {
-    height: 250,
-    borderRadius: 20,
-    padding: 5,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  safeArea: {
+    flex: 1
   },
-  respuestas: {
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderRadius: 50,
+  backgroundImage: {
+    flex: 1,
+    width: '100%'
   },
-  comprobar: {
-    backgroundColor: 'rgba(0, 0,255, 0.8)',
-    borderRadius: 50,
+  mainContainer: {
+   
+    width: '100%',
+    alignItems: 'center'
+  },
+  header: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    
+  },
+  homeButton: {
+    
+    padding: 10,
+  },
+  homeIcon: {
+    width: 40,
+    height: 40,
+    
   },
   statusBar: {
     flexDirection: 'row',
     alignItems: 'center',
+    
   },
-  status: {
+  statusText: {
     marginHorizontal: 10,
     fontSize: 18,
+    color: 'white'
   },
-  backgroundImage: {
+  contentContainer: {
     width: '100%',
-    resizeMode: 'cover',
+    height: '100%',
+    alignItems: 'center',
+    padding: 20,
+    
   },
+  muteButtonContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  position: 'relative',
+  bottom: 20,
+  },
+ 
+  questionContainer: {
+    width: '100%',
+    height: 200,
+    borderRadius: 20,
+    padding: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    marginBottom: 20,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  referenceText: {
+    color: 'white',
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    padding: 8
+  },
+  questionText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    textAlign: 'center'
+  },
+  answersContainer: {
+    width: '100%',
+    alignItems: 'center'
+  },
+  answerButton: {
+    width: 370,
+    height: 64,
+    borderRadius: 50,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 4,
+    borderWidth: 2,
+    borderColor: '#gray',
+    padding: 20,
+  },
+  selectedAnswer: {
+    borderWidth: 4,
+    borderColor: '#00FF00',
+    
+  },
+  correctAnswer: {
+    borderWidth: 2,
+    borderColor: '#00FF00'
+  },
+  incorrectAnswer: {
+    borderWidth: 2,
+    borderColor: '#FF0000'
+  },
+  answerText: {
+    
+    fontSize: 18,
+    color: 'white',
+    fontWeight: 'bold'
+  },
+  checkButton: {
+    width: 208,
+    height: 64,
+    borderRadius: 50,
+    backgroundColor: 'rgba(0, 0, 255, 0.8)',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    marginVertical: 20
+  },
+  checkButtonText: {
+    fontSize: 18,
+    color: 'white',
+    fontWeight: 'bold'
+  },
+  actionsContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  actionButton: {
+    width: 200,
+    height: 80,
+    borderRadius: 15,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  disabledButton: {
+    opacity: 0.5
+  },
+  actionText: {
+    color: 'white',
+    fontWeight: 'bold'
+  }
 });
 
 export default BibleQuiz;

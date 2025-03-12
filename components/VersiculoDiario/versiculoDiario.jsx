@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   Alert,
   Share,
   ImageBackground,
+  Animated,
+  ActivityIndicator,
 } from "react-native";
 import { Feather, AntDesign } from "@expo/vector-icons";
 import { db } from "../../components/firebase/firebaseConfig";
@@ -25,28 +27,31 @@ import {
   updateDoc,
   orderBy,
   startAfter,
-  
+  onSnapshot,
 } from "firebase/firestore";
 import useAuth from "../authContext/authContext";
 import { useNavigation } from "@react-navigation/native";
 import { captureRef } from "react-native-view-shot";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useToast } from "react-native-toast-notifications";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { LinearGradient } from "expo-linear-gradient";
 
-
-const VersiculosDiarios = () => {
+export const VersiculosDiarios = () => {
   const { user } = useAuth();
   const navigation = useNavigation();
   const [versiculo, setVersiculo] = useState(null);
   const [versiculoGuardado, setVersiculoGuardado] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const userId = user?.uid;
+  const toast = useToast();
 
   // Estado para controlar si se muestran los botones o no.
   const [hideButtons, setHideButtons] = useState(false);
 
-  // Creamos el ref para capturar la vista completa (incluyendo el fondo y el contenido)
+  // Ref para capturar la vista completa (fondo y contenido)
   const viewRef = useRef();
-      
-    // Obtener versículo del día
+
+  // Obtener versículo del día
   useEffect(() => {
     if (!userId) return;
   
@@ -122,7 +127,6 @@ const VersiculosDiarios = () => {
   
       } catch (error) {
         console.error("Error obteniendo versículo:", error);
-        // Manejar error o asignar versículo por defecto
       }
     };
   
@@ -130,202 +134,215 @@ const VersiculosDiarios = () => {
   }, [userId]);
   
 
-  // Función para capturar la vista SIN los botones y compartir la imagen
+  // Función para compartir la imagen capturada sin botones
   const share = async () => {
+    setIsProcessing(true);
+    toast.show('Compartiendo...',
+       { type: 'success', 
+        icon: <ActivityIndicator size="small" color="white" />
+
+        });
     try {
-      // Ocultamos temporalmente los botones
       setHideButtons(true);
-      // Esperamos un breve momento para que se re-renderice la vista sin los botones
       setTimeout(async () => {
         const uri = await captureRef(viewRef, {
-          format: "png", // Puedes usar "jpg" si prefieres
+          format: "png",
           quality: 1,
         });
-        console.log("Imagen capturada");
-
-        // Compartimos la imagen capturada
         await Share.share({
           url: uri,
           title: "Compartir Versículo",
         });
-
-        // Volvemos a mostrar los botones después de compartir
         setHideButtons(false);
-      }, 200); // 200 ms de retraso (ajusta si es necesario)
+      }, 200);
     } catch (error) {
       console.error("Error al capturar y compartir:", error.message);
-      // Aseguramos que se vuelvan a mostrar los botones en caso de error
+      setHideButtons(false);
+    }finally{
+      setIsProcessing(false);
       setHideButtons(false);
     }
   };
 
-  // Función para guardar el versículo como favorito
-  const guardar = async () => {
-    try {
-      // Si ya está guardado, no hacer nada
-      if (versiculoGuardado){
-        Alert.alert("Este versículo ya estaba guardado.");
-        return;
-      }
-      
-      // Actualizar estado inmediatamente
-      setVersiculoGuardado(true);
-      const today = new Date().toDateString();
-      await AsyncStorage.setItem('versiculoFavorito', today);
-      
-      const versiculosRef = collection(db, `users/${userId}/versiculosFavoritos`);
-      const q = query(versiculosRef, where("texto", "==", versiculo.texto));
-  
-      const querySnapshot = await getDocs(q);
-  
-      if (!querySnapshot.empty) {
-        Alert.alert("Este versículo ya está guardado.");
-        return;
-      }
-  
-      await addDoc(versiculosRef, {
-        fecha: new Date().toDateString(),
-        versiculo: versiculo.versiculo,
-        texto: versiculo.texto,
-        timestamp: serverTimestamp(),
-      });
-      
-    
-  
-    } catch (error) {
-      console.error("Error guardando el versículo:", error);
-      // Revertir estado si hay error
-      setVersiculoGuardado(false);
-    }
-  };
-  
-  
-  // verficar si el versiculo ya ha sido guardado
   useEffect(() => {
-    const checkInitialState = async () => {
-      const today = new Date().toDateString();
-      const savedDate = await AsyncStorage.getItem('versiculoFavorito');
-      setVersiculoGuardado(savedDate === today);
-      //console.log('dia guardado del versiculo',savedDate);
-    };
-    checkInitialState();
-  }, []);
-
-
-
-  return (
-<ImageBackground
-  ref={viewRef}
-  collapsable={false}
-  source={require("../../assets/images/bg-versiculo.jpg")}
-  style={styles.backgroundImage}
->
- 
-  <View style={styles.card}>
-    
-      {/* Texto del versículo con formato de cita */}
-      <Text style={styles.text}>“{versiculo?.texto}”</Text>
-      
-      {/* Referencia alineada a la derecha con tipografía especial */}
-      <Text style={styles.reference}>- {versiculo?.versiculo}</Text>
-
-      {/* Contenedor de botones alineado a la derecha */}
-    </View>
-      {!hideButtons && (
-        <View style={styles.actionsContainer}>
-          <Pressable style={styles.actionButton} onPress={share}>
-            <Feather name="share-2" size={18} color="white" />
-            <Text style={styles.actionText}>Compartir</Text>
-          </Pressable>
-          <Pressable style={styles.actionButton} onPress={guardar}>
-            <AntDesign
-              name={versiculoGuardado ? "heart" : "hearto"}
-              size={18}
-              color={versiculoGuardado ? "red" : "white"}
-            />
-            <Text style={styles.actionText}>{versiculoGuardado ? 'Guardado' : 'Guardar'}</Text>
-          </Pressable>
-        </View>
-      )}
+    if (!userId || !versiculo?.id) return;
   
-</ImageBackground>
+    const docRef = doc(db, `users/${userId}/versiculosFavoritos/${versiculo.id}`);
+  
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      setVersiculoGuardado(docSnap.exists());
+    });
+  
+    return () => unsubscribe(); // Limpiar la suscripción cuando el componente se desmonte
+  }, [userId, versiculo?.id]);
 
-  );
+ 
+ // Función de guardado simplificada
+ const guardar = async () => {
+  
+  if ( versiculoGuardado){
+    toast.show("⭐ Ya guardaste este versículo!",{
+      type: "success",
+      placement: "top",
+    });
+    setIsProcessing(true);
+    return;
+  } 
+
+setIsProcessing(true);
+
+toast.show("⭐ Guardando...",{
+  type: "success",
+  placement: "top",
+  icon: <ActivityIndicator size="small" color="white" />,
+});
+
+
+  try {
+    setHideButtons(true);
+    await new Promise(resolve => setTimeout(resolve, 200)); // Esperar renderizado
+
+    const uri = await captureRef(viewRef, {
+      format: "png",
+      quality: 0.8,
+    });
+
+    const storage = getStorage();
+    const filename = `versiculo_${Date.now()}.png`;
+    const imageRef = storageRef(storage, `users/${userId}/${filename}`);
+    
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    await uploadBytes(imageRef, blob);
+    
+    const imageUrl = await getDownloadURL(imageRef);
+    
+    // Guardar usando ID del versículo como referencia
+    const docRef = doc(db, `users/${userId}/versiculosFavoritos/${versiculo.id}`);
+    await setDoc(docRef, {
+      imageUrl,
+      timestamp: serverTimestamp()
+    }, { merge: true });
+
+    setVersiculoGuardado(true); // Actualizar estado inmediatamente
+    
+  } catch (error) {
+    console.error("Error:", error);
+    toast.show("😢 Error al guardar", { type: "danger" });
+  } finally {
+    setHideButtons(false);
+    setIsProcessing(false);
+  }
+  
 };
 
-// Estilos ajustados
-const styles = StyleSheet.create({
-  backgroundImage: {
 
-    minHeight: 300, // Altura aumentada
-    borderRadius: 20,
-    overflow: "hidden",
-    padding: 10,
-    paddingTop: 20,
+
+return (
+  <LinearGradient
+  ref={viewRef}
+  colors={["#6A65FB", "#8C9EFF"]}
+    style={styles.container}
+  >
+
+    <View style={styles.card}>
+      <Text style={styles.reference}>- {versiculo?.versiculo}</Text>
+      <Text style={styles.text}>{versiculo?.texto}</Text>
+      {!hideButtons && (
+      <View style={styles.actionsContainer}>
+        <Pressable style={styles.actionButton} onPress={share}>
+          <Feather name="share-2" size={18} color="white" />
+          <Text style={styles.actionText}>Compartir</Text>
+        </Pressable>
+        
+        <Pressable 
+          style={styles.actionButton} 
+          onPress={guardar}
+          disabled={ isProcessing}
+        >
+          <AntDesign
+            name={versiculoGuardado ? "heart" : "hearto"}
+            size={18}
+            color={versiculoGuardado ? "#FF3B30" : "white"}
+          />
+          <Text style={styles.actionText}>
+            {versiculoGuardado ? 'Guardado' : 'Guardar'}
+          </Text>
+        </Pressable>
+      </View>
+    )}
+    </View>
     
-  },
+    
+  </LinearGradient>
+);
+};
+
+
+  // Estilos ajustados
+  const styles = StyleSheet.create({
+    container: {
  
-  card: {
-    minHeight: 235, // Altura aumentada
-    backgroundColor: "white",
-    opacity: 0.5,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignContent: 'center'
-  },
- 
-  text: {
-    fontSize: 20, // Tamaño de fuente aumentado
-    color: "black",
-    fontWeight: "500",
-    lineHeight: 36, // Interlineado mayor
-    textAlign: "center",
-    fontFamily: 'Georgia', // Fuente serif si está disponible
-    marginHorizontal: 10,
-    //marginTop: 5,
+      
+      borderRadius: 20,
+      overflow: "hidden",
+     marginBottom: 20
+    },
    
-  },
-  reference: {
-    fontSize: 20,
-    color: "black",
-    fontWeight: "400",
-    textAlign: "right",
-    fontStyle: "italic",
-    fontFamily: 'Georgia', // Fuente serif si está disponible
-    marginHorizontal: 15,
-    position: 'absolute',
-    bottom: 10,
-    right: 10
-  },
-  actionsContainer: {
-    flexDirection: "row",
-    justifyContent: 'flex-start', // Botones a la derecha
-    gap: 15, // Espacio entre botones
-    marginTop: 0,
-    position: 'absolute',
-    bottom: 2,
-    left: 15
-    
-  },
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingVertical: 8,
-    paddingHorizontal: 5,
-    borderRadius: 20, // Bordes redondeados
-  // backgroundColor: 'rgba(255, 255, 255, 0.6)',
-    //borderWidth: 1,
-    //borderColor: "#2C3A4B",
-    
-    
-  },
-  actionText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "500",
-    letterSpacing: 0.5,
-  },
-});
+    card: {
+      minHeight: 235, // Altura aumentada
+//backgroundColor: "black",
+      //opacity: 0.5,
+      borderRadius: 20,
+      justifyContent: 'center',
+      alignContent: 'center'
+    },
+   
+    text: {
+      fontSize: 20, // Tamaño de fuente aumentado
+      color: "white",
+      fontWeight: "500",
+      lineHeight: 36, // Interlineado mayor
+      textAlign: "center",
+      fontFamily: 'Georgia', // Fuente serif si está disponible
+      marginHorizontal: 10,
+      
+     
+    },
+    reference: {
+      fontSize: 16,
+      color: "white",
+      fontWeight: "400",
+      textAlign: "center",
+      fontStyle: "italic",
+      fontFamily: 'Georgia', // Fuente serif si está disponible
+      
+    },
+    actionsContainer: {
+      flexDirection: "row",
+      justifyContent: 'flex-start', // Botones a la derecha
+      gap: 5, // Espacio entre botones
+      marginTop: 0,
+      position: 'absolute',
+      bottom: 2,
+      left: 15
+      
+    },
+    actionButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 2,
+      paddingVertical: 8,
+      paddingHorizontal: 2,
+      borderRadius: 20, // Bordes redondeados
   
-  export default VersiculosDiarios;
+      
+      
+    },
+    actionText: {
+      color: "white",
+      fontSize: 14,
+      fontWeight: "500",
+      
+    },
+  });

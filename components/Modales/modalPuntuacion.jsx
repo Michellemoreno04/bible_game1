@@ -8,7 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSound } from '../soundFunctions/soundFunction';
 
 const { width } = Dimensions.get('window');
-export function ModalPuntuacion({ isVisible, onClose, respuestasCorrectas, expGanada, monedasGanadas,userInfo }) {
+export function ModalPuntuacion({ isVisible, onClose, respuestasCorrectas, expGanada, monedasGanadas,userInfo,showAds }) {
    const playSound = useSound();
  
    useEffect(() => {
@@ -77,7 +77,7 @@ export function ModalPuntuacion({ isVisible, onClose, respuestasCorrectas, expGa
              </View>
            </View>
  
-           <Pressable onPress={onClose} style={styles.buttonContainer}>
+           <Pressable onPress={showAds} style={styles.buttonContainer}>
              <LinearGradient
                colors={['#ff6b6b', '#ff8e53']}
                style={styles.buttonGradient}

@@ -114,7 +114,7 @@ export default function Profile() {
             </View>
             
             {userInfo?.Insignias?.length > 0 ? (
-              console.log('Insignias:', userInfo.Insignias),
+              
 
                 <InsigniasComponent userInfo={userInfo.Insignias} />
             ) : (
@@ -208,12 +208,13 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%',
-    marginTop: 16,
+    alignItems: 'center',
+    
   },
   statItem: {
-    alignItems: 'center',
     flex: 1,
+    alignItems: 'center',
+    alignContent: 'center',
   },
   statValue: {
     fontSize: 20,

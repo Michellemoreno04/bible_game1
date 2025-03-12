@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Text, View, Pressable, Alert, TextInput, KeyboardAvoidingView, ScrollView, SafeAreaView,Platform } from 'react-native'
+import { Text, View, Pressable, Alert, TextInput,  ScrollView, SafeAreaView,Platform ,StyleSheet,StatusBar as RNStatusBar} from 'react-native'
 import { useNavigation } from '@react-navigation/native';
 import { Link } from 'expo-router';
 import { auth } from '../components/firebase/firebaseConfig';
@@ -8,7 +8,7 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from 'expo-linear-gradient';
 import { AntDesign, FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { SigninComponents } from '../components/signinComponents/signinComponents';
-
+import  {StatusBar} from 'expo-status-bar'
 
 
 function Login() {
@@ -73,98 +73,208 @@ const handleFirebaseError = (error) => {
       errorMessage = "Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo más tarde.";
   }
 
-  // Muestra el mensaje de error con una alerta
-  Alert.alert("Error de inicio de sesión", errorMessage, [{ text: "Entendido" }]);
-};
+  };
 
     
 
  
-      return (
-        <LinearGradient 
-  colors={['#1D2671', '#C33764']} 
-  style={{ flex: 1 }}
->
-  <KeyboardAvoidingView 
-    behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
-    style={{ flex: 1 }}
-    keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+return (
+  <LinearGradient
+    colors={['#1D2671', '#C33764']}
+    style={styles.gradient}
   >
-    <ScrollView 
-      contentContainerStyle={{ flexGrow: 1 }}
-      keyboardShouldPersistTaps="handled"
-    >
-      <View className="flex-1 px-8 justify-center pb-16">
-        {/* Logo Section */}
-        <View className="items-center mb-12">
-          <Text className="text-5xl font-bold text-white mb-2 shadow-lg">BibleBrain</Text>
-          <Text className="text-lg text-gray-200">Tu conexión espiritual inteligente</Text>
-        </View>
-
-        {/* Form Section */}
-        <View className="space-y-6">
-          {/* Email Input */}
-          <View className="bg-white/10 rounded-xl p-3 mb-3 flex-row items-center">
-            <MaterialIcons name="email" size={24} color="#FFF" style={{ marginRight: 10 }} />
-            <TextInput
-              placeholder="Correo electrónico"
-              placeholderTextColor="#rgba(255,255,255,0.7)"
-              className="flex-1 text-white text-lg"
-              autoCapitalize="none"
-              keyboardType="email-address"
-              value={loginCredentials.email}
-              onChangeText={(text) => handlerOnchange('email', text)}
-            />
+     <SafeAreaView 
+       style={[
+         styles.safeArea, 
+         // Añadimos padding solo para Android
+         Platform.OS === 'android' && { paddingTop: RNStatusBar.currentHeight }
+       ]}
+     >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.container}>
+          {/* Logo Section */}
+          <View style={styles.logoContainer}>
+            <Text style={styles.title}>BibleBrain</Text>
+            <Text style={styles.subtitle}>Tu conexión espiritual inteligente</Text>
           </View>
 
-          {/* Password Input */}
-          <View className="bg-white/10 rounded-xl p-3 mb-3 flex-row items-center">
-            <MaterialIcons name="lock" size={24} color="#FFF" style={{ marginRight: 10 }} />
-            <TextInput
-              placeholder="Contraseña"
-              placeholderTextColor="#rgba(255,255,255,0.7)"
-              className="flex-1 text-white text-lg"
-              secureTextEntry
-              value={loginCredentials.password}
-              onChangeText={(text) => handlerOnchange('password', text)}
-            />
-          </View>
-
-          {/* Login Button */}
-          <Pressable
-            onPress={handleLogin}
-            className="bg-amber-500 rounded-xl p-4 items-center justify-center shadow-lg active:opacity-80"
-            android_ripple={{ color: '#ffffff50' }}
-          >
-            <Text className="text-white text-xl font-bold">Acceder</Text>
-          </Pressable>
-
-          {/* Social Login */}
-          <View className="py-6">
-            <View className="flex-row items-center mb-6">
-              <View className="flex-1 h-px bg-white/30" />
-              <Text className="px-4 text-white/80 text-sm">Continúa con</Text>
-              <View className="flex-1 h-px bg-white/30" />
+          {/* Form Section */}
+          <View style={styles.formContainer}>
+            {/* Email Input */}
+            <View style={styles.inputContainer}>
+              <MaterialIcons 
+                name="email" 
+                size={24} 
+                color="#FFF" 
+                style={styles.icon} 
+              />
+              <TextInput
+                placeholder="Correo electrónico"
+                placeholderTextColor="rgba(255,255,255,0.7)"
+                style={styles.input}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                value={loginCredentials.email}
+                onChangeText={(text) => handlerOnchange('email', text)}
+              />
             </View>
 
-            <SigninComponents />
-          </View>
+            {/* Password Input */}
+            <View style={styles.inputContainer}>
+              <MaterialIcons 
+                name="lock" 
+                size={24} 
+                color="#FFF" 
+                style={styles.icon} 
+              />
+              <TextInput
+                placeholder="Contraseña"
+                placeholderTextColor="rgba(255,255,255,0.7)"
+                style={styles.input}
+                secureTextEntry
+                value={loginCredentials.password}
+                onChangeText={(text) => handlerOnchange('password', text)}
+              />
+            </View>
 
-          {/* Signup Link */}
-          <View className="flex-row justify-center pt-4">
-            <Text className="text-white/90">¿Nuevo aquí? </Text>
-            <Link href="/signUp" className="text-amber-400 font-semibold underline">
-              <Text className="text-amber-400 font-semibold underline">Crea una cuenta</Text>
-            </Link>
+              
+            {/* Login Button */}
+            <Pressable
+              onPress={handleLogin}
+              style={styles.loginButton}
+              android_ripple={{ color: '#ffffff50' }}
+            >
+              <Text style={styles.buttonText}>Acceder</Text>
+            </Pressable>
+
+            {/* Social Login */}
+            <View style={styles.socialContainer}>
+              <View style={styles.dividerContainer}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>Continúa con</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <SigninComponents />
+            </View>
+
+            {/* Signup Link */}
+            <View style={styles.signupContainer}>
+              <Text style={styles.signupText}>¿Nuevo aquí? </Text>
+              <Link href="/signUp" style={styles.signupLink}>
+                <Text style={styles.signupLink}>Crea una cuenta</Text>
+              </Link>
+            </View>
           </View>
         </View>
-      </View>
-    </ScrollView>
-  </KeyboardAvoidingView>
-</LinearGradient>
+      </ScrollView>
+    </SafeAreaView>
+    <StatusBar barStyle="light-content"  />
+  </LinearGradient>
+);
+};
 
+const styles = StyleSheet.create({
+gradient: {
+  flex: 1
+},
+safeArea: {
+  flex: 1
+},
+scrollContent: {
+  flexGrow: 1
+},
+container: {
+  flex: 1,
+  paddingHorizontal: 32,
+  paddingBottom: 64,
+  justifyContent: 'center'
+},
+logoContainer: {
+  alignItems: 'center',
+  marginBottom: 48
+},
+title: {
+  fontSize: 48,
+  fontWeight: 'bold',
+  color: 'white',
+  marginBottom: 8,
+  textShadowColor: 'rgba(0, 0, 0, 0.25)',
+  textShadowOffset: { width: 0, height: 2 },
+  textShadowRadius: 4
+},
+subtitle: {
+  fontSize: 18,
+  color: '#e5e7eb'
+},
+formContainer: {
+  gap: 5,
+},
+inputContainer: {
+  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  borderRadius: 12,
+  padding: 12,
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginBottom: 12
+},
+icon: {
+  marginRight: 10
+},
+input: {
+  flex: 1,
+  color: 'white',
+  fontSize: 18
+},
+loginButton: {
+  backgroundColor: '#f59e0b',
+  borderRadius: 12,
+  padding: 16,
+  alignItems: 'center',
+  justifyContent: 'center',
+  elevation: 3,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.23,
+  shadowRadius: 2.62
+},
+buttonText: {
+  color: 'white',
+  fontSize: 20,
+  fontWeight: 'bold'
+},
 
-      );
+dividerContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginBottom: 24
+},
+dividerLine: {
+  flex: 1,
+  height: 1,
+  backgroundColor: 'rgba(255, 255, 255, 0.3)'
+},
+dividerText: {
+  paddingHorizontal: 16,
+  color: 'rgba(255, 255, 255, 0.8)',
+  fontSize: 14
+},
+signupContainer: {
+  flexDirection: 'row',
+  justifyContent: 'center',
+  paddingTop: 16
+},
+signupText: {
+  color: 'rgba(255, 255, 255, 0.9)'
+},
+signupLink: {
+  color: '#fbbf24',
+  fontWeight: '600',
+  textDecorationLine: 'underline'
 }
+});
 
-export default Login
+export default Login;

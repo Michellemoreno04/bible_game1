@@ -1,6 +1,6 @@
 import { Link } from 'expo-router';
 import React, { useState } from 'react';
-import { View, TextInput, KeyboardAvoidingView, Text, Platform, Pressable, Alert, ScrollView,StyleSheet, Image, Linking } from 'react-native';
+import { View, TextInput, KeyboardAvoidingView, Text, Platform, Pressable, Alert, ScrollView,StyleSheet, Image, Linking, SafeAreaView } from 'react-native';
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import {auth,db} from '../components/firebase/firebaseConfig'
 import { useNavigation } from '@react-navigation/native';
@@ -125,118 +125,166 @@ const handleFirebaseError = (error) => {
 
 // Función para manejar la selección de imagen
 const pickImage = async () => {
-  // Verificar y solicitar permisos
-  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  try {
+    // Solicitar permisos primero
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-  if (status !== 'granted') {
-    if (status === 'denied') {
-      // Mostrar alerta con opción para ir a configuración
-      Alert.alert(
-        'Permiso requerido',
-        'Para seleccionar una imagen, necesitas habilitar el acceso a la galería en la configuración de la aplicación.',
-        [
-          {
-            text: 'Cancelar',
-            style: 'cancel',
-          },
-          {
-            text: 'Abrir Configuración',
-            onPress: () => Linking.openSettings(),
-          },
-        ]
-      );
-    } else {
-      Alert.alert(
-        'Permiso requerido',
-        'Necesitas permitir el acceso a la galería para seleccionar una imagen.'
-      );
+    // Manejar diferentes estados de permisos
+    if (status !== 'granted') {
+      if (status === 'denied') {
+        Alert.alert(
+          'Permiso requerido',
+          'Para seleccionar una imagen, necesitas habilitar el acceso a la galería en la configuración de la aplicación.',
+          [
+            { text: 'Cancelar', style: 'cancel' },
+            { text: 'Abrir Configuración', onPress: () => Linking.openSettings() }
+          ]
+        );
+      } else {
+        Alert.alert(
+          'Permiso requerido',
+          'Necesitas permitir el acceso a la galería para seleccionar una imagen.'
+        );
+      }
+      return null;
     }
-    return;
-  }
 
-  // Continuar con la selección de imagen si el permiso está concedido
-  let result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ['images'],
-    allowsEditing: true,
-    aspect: [1, 1],
-    quality: 1,
-  });
+    // Lanzar el selector de imágenes con configuraciones actualizadas
+    const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 1,
+          });
 
-  if (!result.canceled) {
-    setImageUri(result.assets[0].uri);
-    setAvatarType(null);
+    // Manejar resultado
+    if (!result.canceled && result.assets?.length > 0) { // Usar canceled con una 'l'
+      const selectedUri = result.assets[0].uri;
+      setImageUri(selectedUri);
+      setAvatarType(null);
+      return selectedUri;
+    }
+    return null;
+
+  } catch (error) {
+    console.error("Error en selección de imagen:", error);
+    Alert.alert("Error", "Ocurrió un error al seleccionar la imagen");
+    return null;
   }
 };
 
-  return (
-    <LinearGradient 
-    colors={['#1D2671', '#C33764']} // Mismo gradiente que en Login
-    style={{ flex: 1 }}
+const takePhoto = async () => {
+  try {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permiso requerido',
+        'Necesitas habilitar el acceso a la cámara en la configuración del dispositivo',
+        [{ text: 'OK', onPress: () => Linking.openSettings() }]
+      );
+      return null;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 1,
+          });
+    if (!result.canceled && result.assets?.length > 0) {
+      const photoUri = result.assets[0].uri;
+      setImageUri(photoUri);
+      setAvatarType(null);
+      return photoUri;
+    }
+    return null;
+
+  } catch (error) {
+    console.error("Error al tomar foto:", error);
+    Alert.alert("Error", "Falló la captura de imagen");
+    return null;
+  }
+};
+
+// Función para mostrar selector de origen
+const handleImageSource = () => {
+  Alert.alert(
+    "Seleccionar imagen",
+    "Elige el origen de la imagen",
+    [
+      { text: "Cámara", onPress: takePhoto },
+      { text: "Galería", onPress: pickImage },
+      { text: "Cancelar", style: "cancel" }
+    ]
+  );
+};
+return (
+  <LinearGradient
+    colors={['#1D2671', '#C33764']}
+    style={styles.gradient}
   >
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
-      style={{ flex: 1 }}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
-    >
-      <ScrollView 
-        contentContainerStyle={{ flexGrow: 1 }}
+     <SafeAreaView 
+           style={[
+             styles.safeArea, 
+             // Añadimos padding solo para Android
+             Platform.OS === 'android' && { paddingTop: RNStatusBar.currentHeight }
+           ]}
+         >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="flex-1 px-8 justify-center pb-16">
+        <View style={styles.container}>
           {/* Sección de Logo y Título */}
-          <View className="items-center mb-12">
-            <Text className="text-5xl font-bold text-white mb-2 shadow-lg">
-              BibleBrain
-            </Text>
-            <Text className="text-lg text-gray-200">
-              Registrate para continuar
-            </Text>
+          <View style={styles.header}>
+            <Text style={styles.title}>BibleBrain</Text>
+            <Text style={styles.subtitle}>Regístrate para continuar</Text>
           </View>
-{/* Selecion de imagen de perfil */}
+
+          {/* Selección de imagen de perfil */}
           <Pressable
-                  onPress={pickImage}
-                  className={`w-28 h-28 self-center mb-5 rounded-full bg-white/10 items-center justify-center border-2 ${
-                    imageUri || avatarType ? 'border-amber-500' : 'border-transparent'
-                  }`}
-                >
-                  {imageUri ? (
-                    <Image source={{ uri: imageUri }} className="w-full h-full rounded-full" />
-                  ) : (
-                    <MaterialIcons name="add-a-photo" size={28} color="#FFF" />
-                  )}
-                </Pressable>
+            onPress={handleImageSource}
+            style={[styles.avatarContainer, (imageUri || avatarType) && styles.avatarSelected]}
+          >
+            {imageUri ? (
+              <Image source={{ uri: imageUri }} style={styles.avatarImage} />
+            ) : (
+              <MaterialIcons name="add-a-photo" size={28} color="#FFF" />
+            )}
+          </Pressable>
 
           {/* Sección de Formulario */}
-          <View className="space-y-6">
+          <View style={styles.formContainer}>
             {/* Input de Nombre */}
-            <View className="bg-white/10 rounded-xl p-3 mb-3 flex-row items-center ">
+            <View style={styles.inputWrapper}>
               <MaterialIcons 
                 name="person" 
                 size={24} 
                 color="#FFF" 
-                style={{ marginRight: 10 }} 
+                style={styles.icon} 
               />
               <TextInput
                 placeholder="Nombre"
                 placeholderTextColor="rgba(255,255,255,0.7)"
-                className="flex-1 text-white text-lg font-size-16 " 
+                style={styles.input}
                 value={credenciales.name}
                 onChangeText={(text) => handlerOnChange('name', text)}
               />
             </View>
 
             {/* Input de Correo electrónico */}
-            <View className="bg-white/10 rounded-xl p-3 mb-3 flex-row items-center">
+            <View style={styles.inputWrapper}>
               <MaterialIcons 
                 name="email" 
                 size={24} 
                 color="#FFF" 
-                style={{ marginRight: 10 }} 
+                style={styles.icon} 
               />
               <TextInput
                 placeholder="Correo electrónico"
                 placeholderTextColor="rgba(255,255,255,0.7)"
-                className="flex-1 text-white text-lg  "
+                style={styles.input}
                 autoCapitalize="none"
                 keyboardType="email-address"
                 value={credenciales.email}
@@ -245,93 +293,205 @@ const pickImage = async () => {
             </View>
 
             {/* Input de Contraseña */}
-            <View className="bg-white/10 rounded-xl p-3 mb-3 flex-row items-center">
+            <View style={styles.inputWrapper}>
               <MaterialIcons 
                 name="lock" 
                 size={24} 
                 color="#FFF" 
-                style={{ marginRight: 10 }} 
+                style={styles.icon} 
               />
               <TextInput
                 placeholder="Contraseña"
                 placeholderTextColor="rgba(255,255,255,0.7)"
-                className="flex-1 text-white text-lg"
+                style={styles.input}
                 secureTextEntry
                 value={credenciales.password}
                 onChangeText={(text) => handlerOnChange('password', text)}
               />
             </View>
+            { // Validación de la contraseña
+              credenciales.password && credenciales.password.length < 8 && 
+              <Text style={styles.errorText}>! La contraseña debe tener al menos 6 caracteres.</Text>
+            }
 
             {/* Input de Confirmar Contraseña */}
-            <View className="bg-white/10 rounded-xl p-3 mb-3 flex-row items-center">
+            <View style={styles.inputWrapper}>
               <MaterialIcons 
                 name="lock" 
                 size={24} 
                 color="#FFF" 
-                style={{ marginRight: 10 }} 
+                style={styles.icon} 
               />
               <TextInput
                 placeholder="Confirmar contraseña"
                 placeholderTextColor="rgba(255,255,255,0.7)"
-                className="flex-1 text-white text-lg"
+                style={styles.input}
                 secureTextEntry
                 value={credenciales.confirmPassword}
                 onChangeText={(text) => handlerOnChange('confirmPassword', text)}
               />
             </View>
 
-            {/* Mensaje de error (si existe) */}
-            {error ? (
-              <Text className="text-red-500 text-center">{error}</Text>
-            ) : null}
+            {error && <Text style={styles.errorText}>{error}</Text>}
 
-            {/* Botón para registrarse */}
+            {/* Botón de Registro */}
             <Pressable
               onPress={handleSignUp}
-              className="bg-amber-500 rounded-xl p-4 items-center justify-center shadow-lg active:opacity-80"
+              style={styles.signupButton}
               android_ripple={{ color: '#ffffff50' }}
             >
-              <Text className="text-white text-xl font-bold">Registrate</Text>
+              <Text style={styles.buttonText}>Regístrate</Text>
             </Pressable>
 
             {/* Sección de Redes Sociales */}
-            <View className="py-6">
-              <View className="flex-row items-center mb-6">
-                <View className="flex-1 h-px bg-white/30" />
-                <Text className="px-4 text-white/80 text-sm">Continúa con</Text>
-                <View className="flex-1 h-px bg-white/30" />
+            <View >
+              <View style={styles.divider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>Continúa con</Text>
+                <View style={styles.dividerLine} />
               </View>
-             <SigninComponents />
+              <SigninComponents />
             </View>
 
-            {/* Enlace para ir a Login */}
-            <View className="flex-row justify-center pt-4">
-              <Text className="text-white/90">Ya tienes una cuenta? </Text>
-              <Link href="/login">
-                <Text className="text-amber-400 font-semibold underline">
-                  Inicia sesión
-                </Text>
+            {/* Enlace a Login */}
+            <View style={styles.loginLink}>
+              <Text style={styles.loginText}>¿Ya tienes una cuenta? </Text>
+              <Link href="/login" style={styles.loginLink}>
+                <Text style={styles.goToLogin}>Inicia sesión</Text>
               </Link>
             </View>
           </View>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </SafeAreaView>
   </LinearGradient>
 );
 };
 
 const styles = StyleSheet.create({
-  blur: {
-   width: 100,
-   height: 100,
-   flexDirection: 'row',
-   alignItems: 'center',
-   justifyContent: 'center',
-   borderRadius: 50,
-   overflow: 'hidden',
-   marginBottom: 20
-  },
+gradient: {
+  flex: 1
+},
+safeArea: {
+  flex: 1
+},
+scrollContent: {
+  flexGrow: 1
+},
+container: {
+  flex: 1,
+  paddingHorizontal: 32,
+  paddingBottom: 64,
+  justifyContent: 'center'
+},
+header: {
+  alignItems: 'center',
+  marginBottom: 48
+},
+title: {
+  fontSize: 48,
+  fontWeight: 'bold',
+  color: '#FFF',
+  marginBottom: 8,
+  textShadowColor: 'rgba(0, 0, 0, 0.25)',
+  textShadowOffset: { width: 0, height: 2 },
+  textShadowRadius: 4
+},
+subtitle: {
+  fontSize: 18,
+  color: '#e5e7eb'
+},
+avatarContainer: {
+  width: 112,
+  height: 112,
+  alignSelf: 'center',
+  marginBottom: 20,
+  borderRadius: 56,
+  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderWidth: 2,
+  borderColor: 'transparent'
+},
+avatarSelected: {
+  borderColor: '#f59e0b'
+},
+avatarImage: {
+  width: '100%',
+  height: '100%',
+  borderRadius: 56
+},
+formContainer: {
+  gap: 10
+},
+inputWrapper: {
+  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  borderRadius: 12,
+  padding: 12,
+  flexDirection: 'row',
+  alignItems: 'center'
+},
+icon: {
+  marginRight: 10
+},
+input: {
+  flex: 1,
+  color: '#FFF',
+  fontSize: 18
+},
+errorText: {
+  color: 'white',
+  
+  
+
+},
+signupButton: {
+  backgroundColor: '#f59e0b',
+  borderRadius: 12,
+  padding: 16,
+  alignItems: 'center',
+  justifyContent: 'center',
+  elevation: 3,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.23,
+  shadowRadius: 2.62
+},
+buttonText: {
+  color: '#FFF',
+  fontSize: 20,
+  fontWeight: 'bold'
+},
+
+divider: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginBottom: 10,
+},
+dividerLine: {
+  flex: 1,
+  height: 1,
+  backgroundColor: 'rgba(255, 255, 255, 0.3)'
+},
+dividerText: {
+  paddingHorizontal: 16,
+  color: 'rgba(255, 255, 255, 0.8)',
+  fontSize: 14
+},
+loginLink: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  
+},
+loginText: {
+  color: 'rgba(255, 255, 255, 0.9)'
+},
+goToLogin: {
+  color: '#fbbf24',
+  fontWeight: '600',
+  textDecorationLine: 'underline'
+}
 });
 
-export default SignUp
+export default SignUp;

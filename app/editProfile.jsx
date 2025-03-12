@@ -7,7 +7,8 @@ import {
   StyleSheet, 
   Alert,
   Image,
-  ScrollView 
+  ScrollView, 
+  Linking
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -34,15 +35,15 @@ const EditProfileScreen = () => {
   useEffect(() => {
     if (user) {
       const userRef = doc(db, 'users', user.uid);
-      const unsubscribe = onSnapshot(userRef, (doc) => {
-        setFormData(doc.data());
+      const unsubscribe = onSnapshot(userRef, (docSnapshot) => {
+        setFormData(docSnapshot.data());
       });
       return () => unsubscribe();
     }
   }, [user]);
 
+  // Función para actualizar todos los datos del perfil (se llama al presionar "Guardar")
   const handleUpdate = async () => {
-
     try {
       setLoading(true);
       const userRef = doc(db, 'users', user.uid);
@@ -56,29 +57,104 @@ const EditProfileScreen = () => {
     }
   };
 
-  const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
+
+// En la función pickImage, se reemplaza el valor de mediaTypes por mediaTypeImages
+const pickImage = async () => {
+  try {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso requerido', 'Se necesita acceso a la galería para cambiar la foto');
+      return null;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
-        allowsEditing: true,        
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      }); 
+
+    if (result.canceled) return null;
+    return result.assets[0].uri;
+
+  } catch (error) {
+    console.log("Error al seleccionar imagen:", error);
+    return null;
+  }
+};
+
+const takePhoto = async () => {
+  try {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso requerido', 'Se necesita acceso a la cámara');
+      return null;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
         quality: 1,
       });
-  
-      if (!result.canceled) {
-        console.log('foto subida');
-      } else {
-        alert('You did not select any image.');
-      }
-  
-      if (!result.canceled) {
-        setFormData({ ...formData, FotoPerfil: result.assets[0].uri });
-      }
-      // tambien se puede quita la imagen selecionada de la siguiente forma 
 
-  };
+    if (result.canceled) return null;
+    return result.assets[0].uri;
 
-  const removeImage = () => {
-    setFormData({ ...formData, FotoPerfil: null });
-  };
+  } catch (error) {
+    console.log("Error al tomar foto:", error);
+    return null;
+  }
+};
+
+// Función que muestra el Alert para elegir entre cámara o galería
+const handleImageSelection = async () => {
+  Alert.alert(
+    "Actualizar foto de perfil",
+    "Selecciona una opción",
+    [
+      {
+        text: "Tomar foto",
+        onPress: async () => {
+          const uri = await takePhoto();
+          if (uri) updateProfileImage(uri);
+        }
+      },
+      {
+        text: "Elegir de la galería",
+        onPress: async () => {
+          const uri = await pickImage();
+          if (uri) updateProfileImage(uri);
+        }
+      },
+      { text: "Cancelar", style: "cancel" }
+    ]
+  );
+};
+
+// Función para actualizar la imagen en Firebase
+const updateProfileImage = async (uri) => {
+  try {
+    const userRef = doc(db, 'users', user.uid);
+    await updateDoc(userRef, { FotoPerfil: uri });
+    setFormData(prev => ({ ...prev, FotoPerfil: uri }));
+  } catch (error) {
+    Alert.alert("Error", "No se pudo actualizar la imagen");
+    console.error("Error actualizando imagen:", error);
+  }
+};
+
+// Función para eliminar la imagen
+const removeImage = async () => {
+  try {
+    const userRef = doc(db, 'users', user.uid);
+    await updateDoc(userRef, { FotoPerfil: null });
+    setFormData(prev => ({ ...prev, FotoPerfil: '' }));
+  } catch (error) {
+    Alert.alert("Error", "No se pudo eliminar la imagen");
+    console.error("Error eliminando imagen:", error);
+  }
+};
 
   return (
     <SafeAreaView style={styles.container}>
@@ -103,37 +179,36 @@ const EditProfileScreen = () => {
       </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.content}>
-       <Pressable onPress={pickImage}>
-  <View style={styles.avatarContainer}>
-    {formData.FotoPerfil ? (
-      <Avatar
-        rounded
-        source={{ uri: formData.FotoPerfil }}
-        size="xlarge"
-      />
-    ) : (
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>
-          {formData.Name.toUpperCase().slice(0, 1)}
-        </Text>
-      </View>
-    )}
-    
-    {/* Botón para eliminar foto */}
-    {formData.FotoPerfil && (
-      <Pressable 
-        style={styles.deleteButton} 
-        onPress={removeImage}
-      >
-        <AntDesign name="closecircle" size={30} color="red" />
-      </Pressable>
-    )}
-    
-    <View style={styles.editIcon}>
-      <AntDesign name="camera" size={20} color="white" />
-    </View>
-  </View>
-</Pressable>
+        {/* Al presionar se ejecuta handleImageSelection */}
+        <Pressable onPress={handleImageSelection}>
+          <View style={styles.avatarContainer}>
+            {formData.FotoPerfil ? (
+              <Avatar
+                rounded
+                source={{ uri: formData.FotoPerfil }}
+                size="xlarge"
+              />
+            ) : (
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>
+                  {formData.Name.toUpperCase().slice(0, 1)}
+                </Text>
+              </View>
+            )}
+            {/* Botón para eliminar foto */}
+            {formData.FotoPerfil && (
+              <Pressable 
+                style={styles.deleteButton} 
+                onPress={removeImage}
+              >
+                <AntDesign name="closecircle" size={30} color="red" />
+              </Pressable>
+            )}
+            <View style={styles.editIcon}>
+              <AntDesign name="camera" size={20} color="white" />
+            </View>
+          </View>
+        </Pressable>
 
         <View style={styles.formGroup}>
           <Text style={styles.label}>Nombre Completo</Text>
@@ -150,7 +225,7 @@ const EditProfileScreen = () => {
           <TextInput
             style={styles.input}
             value={formData.Apodo}
-            onChangeText={(text) => setFormData({...formData, username: text})}
+            onChangeText={(text) => setFormData({...formData, Apodo: text})}  
             placeholder="Ej: juan123"
           />
         </View>

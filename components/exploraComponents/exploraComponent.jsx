@@ -7,6 +7,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import  useAuth  from '../authContext/authContext';
 import { db } from '../../components/firebase/firebaseConfig';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import {NoCoinsModal} from '../Modales/notCoints';
+
+
 
 const ExploraComponent = () => {
   const { user } = useAuth();
@@ -16,6 +19,7 @@ const ExploraComponent = () => {
   const [hasDoneQuizToday, setHasDoneQuizToday] = useState(false);
   const [hasReadTheDailyVerse, setHasReadTheDailyVerse] = useState(false);
   const [showFullScreen, setShowFullScreen] = useState(false);
+  const [showNoCoinsModal, setShowNoCoinsModal] = useState(false);
   const animationRef = useRef(null);
 
  
@@ -108,9 +112,11 @@ const handleAnimationPress = async () => {
   const monedas = userDoc.data()?.Monedas || 0;
 
   if (monedas < 100) {
-    Alert.alert('No tienes suficientes monedas para jugar el quiz.');
-    return;
+     // si el usuario no tiene suficientes monedas
+    setShowNoCoinsModal(true);
+    return; 
   }
+    
   await updateDoc(userRef, { Monedas: monedas - 100 });
       
       setShowFullScreen(true);
@@ -125,8 +131,9 @@ const handleAnimationPress = async () => {
 
   return (
     <View >
-    <View className="w-full flex justify-start mt-5">
-              <Text className="text-3xl text-white font-bold">Explora</Text>
+      <NoCoinsModal visible={showNoCoinsModal} onClose={() => setShowNoCoinsModal(false)} />
+    <View>
+              <Text style={styles.title}>Explora</Text>
             </View>
     <ScrollView 
       horizontal
@@ -195,7 +202,7 @@ const handleAnimationPress = async () => {
                   onAnimationFinish={handleAnimationFinish}
                 />
     
-               <View className='flex flex-row gap-2 items-center'>
+               <View style={{flexDirection: 'row', alignItems: 'center'}}>
                <Text style={styles.modalText}>-100</Text>
                <FontAwesome5 name="coins" size={24} color="yellow" />
                </View>
@@ -210,6 +217,13 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 5,
   },
+  title: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+   
+    
+  },
   menuItem: {
     alignItems: 'center',
     
@@ -220,17 +234,18 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 20,
+   
    //backgroundColor: '#E8EDF4',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
     borderWidth: 1,
     borderColor: 'skyblue',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 5,
+   // shadowColor: '#000',
+   // shadowOffset: { width: 0, height: 0 },
+   // shadowOpacity: 0.2,
+   // shadowRadius: 10,
+   // elevation: 5,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     
   },
@@ -242,22 +257,18 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   notificationIcon: {
-    width: '100%',
-    height: '100%',
+    width: 30,
+    height: 30,
+    borderRadius: 15, // 👈 Usa la mitad del tamaño (30/2)
+    overflow: 'hidden',
     position: 'absolute',
-    top: -10,
-    left: 15,
-      
-    },
-    notificationLottie: {
-        width: 30,
-        height: 30,
-        borderRadius: 50,
-        overflow: "hidden",
-        position: "absolute",
-        right: 0,
-        bottom: 75,
-      },
+    top: -12,
+    right: -15,
+  },
+  notificationLottie: {
+    width: '100%',   // 👈 Ocupa todo el espacio del contenedor
+    height: '100%',
+  },
       modalContainer: {
         position: "absolute",
          top: 0,

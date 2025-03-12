@@ -1,20 +1,24 @@
-import { Text, View, StyleSheet, SafeAreaView, ScrollView, ActivityIndicator, } from 'react-native';
-import '../../global.css';
+import { Text, View, StyleSheet, SafeAreaView, ScrollView, ActivityIndicator, Platform,  StatusBar as RNStatusBar } from 'react-native';
+
 import { FontAwesome5 } from '@expo/vector-icons';
 import useAuth from '../../components/authContext/authContext';
 import React, { useEffect, useState } from 'react';
 import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { db } from '@/components/firebase/firebaseConfig';
 import { niveles } from '@/components/Niveles/niveles';
-import VersiculosDiarios from '@/components/VersiculoDiario/versiculoDiario';
+import {VersiculosDiarios} from '@/components/VersiculoDiario/versiculoDiario';
 import NivelModal from '@/components/Modales/modalNivel';
 import { Link, useNavigation } from 'expo-router';
-import ShareButton from '@/components/compartir/share';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Avatar } from '@rneui/base';
 import ExploraComponent from '@/components/exploraComponents/exploraComponent';
 import GuardadosComponents from '@/components/exploraComponents/guardadosComponents';
 import { StatusBar } from 'expo-status-bar';
+import { useToast } from "react-native-toast-notifications";
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+
+const adUnitId = __DEV__ ? TestIds.ADAPTIVE_BANNER : process.env.EXPO_PUBLIC_BANNER_ID;
+
 
 export default function AppComponent() {
   const { user } = useAuth();
@@ -23,6 +27,9 @@ export default function AppComponent() {
   const [showNivelModal, setShowNivelModal] = useState(false);
   const [nivelAnterior, setNivelAnterior] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+
+
+  const toast = useToast();
 
   const userId = user?.uid;
 
@@ -88,7 +95,14 @@ export default function AppComponent() {
       colors={[ '#1E3A5F', '#3C6E9F']}
       style={styles.container}
     >
-      <SafeAreaView style={{ flex: 1 }}>
+    
+       <SafeAreaView 
+       style={[
+         styles.safeArea, 
+         // Añadimos padding solo para Android
+         Platform.OS === 'android' && { paddingTop: RNStatusBar.currentHeight }
+       ]}
+     >
         <ScrollView>
           <View style={styles.screen}>
             <NivelModal
@@ -108,13 +122,13 @@ export default function AppComponent() {
                       ? { source: { uri: userAuthenticated.FotoPerfil } }
                       : { title: userAuthenticated?.Name?.charAt(0) } 
                   }
-                  avatarStyle={{ borderWidth: 1, borderColor: '#fff' }}
+                  avatarStyle={{ borderWidth: 1, borderColor: '#fff', backgroundColor: '#4f46e5',zIndex: -1,overflow: 'hidden',borderRadius: 100, }}
                 />
                 <View style={styles.userInfo}>
                   <Text style={styles.greeting}>
                     {`Hola!, ${userAuthenticated?.Name || 'Anónimo'}`}
                   </Text>
-                  <View className="flex-row items-center justify-center">
+                  <View className="flex-row ">
                     <Text style={styles.level} >
                       {niveles(userAuthenticated?.Exp || 0).insignia}
                     </Text>
@@ -129,9 +143,16 @@ export default function AppComponent() {
             </View>
 
             <VersiculosDiarios />
+           
             <ExploraComponent />
             <GuardadosComponents />
-           
+            <BannerAd  unitId={adUnitId}
+             size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+             onAdLoaded={() => console.log('Ad loaded')} //verificar que el anuncio se haya cargado
+             onAdFailedToLoad={(error) => console.error('Ad failed to load:', error)} // verifica si hay algun error
+             
+             />
+
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -141,6 +162,9 @@ export default function AppComponent() {
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },

@@ -26,6 +26,8 @@ import expo.modules.ExpoModulesPackage;
 import com.airbnb.android.react.lottie.LottiePackage;
 // react-native-gesture-handler
 import com.swmansion.gesturehandler.RNGestureHandlerPackage;
+// react-native-google-mobile-ads
+import io.invertase.googlemobileads.ReactNativeGoogleMobileAdsPackage;
 // react-native-linear-gradient
 import com.BV.LinearGradient.LinearGradientPackage;
 // react-native-reanimated
@@ -93,6 +95,7 @@ public class PackageList {
       new ExpoModulesPackage(),
       new LottiePackage(),
       new RNGestureHandlerPackage(),
+      new ReactNativeGoogleMobileAdsPackage(),
       new LinearGradientPackage(),
       new ReanimatedPackage(),
       new SafeAreaContextPackage(),

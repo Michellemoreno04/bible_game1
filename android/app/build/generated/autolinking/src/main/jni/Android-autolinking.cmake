@@ -14,6 +14,7 @@ add_subdirectory("C:/Users/miche/Desktop/Bible_game1/node_modules/@react-native-
 
 add_subdirectory("C:/Users/miche/Desktop/Bible_game1/node_modules/lottie-react-native/android/build/generated/source/codegen/jni/" lottiereactnative_autolinked_build)
 add_subdirectory("C:/Users/miche/Desktop/Bible_game1/node_modules/react-native-gesture-handler/android/build/generated/source/codegen/jni/" rngesturehandler_codegen_autolinked_build)
+add_subdirectory("C:/Users/miche/Desktop/Bible_game1/node_modules/react-native-google-mobile-ads/android/build/generated/source/codegen/jni/" RNGoogleMobileAdsSpec_autolinked_build)
 
 add_subdirectory("C:/Users/miche/Desktop/Bible_game1/node_modules/react-native-reanimated/android/build/generated/source/codegen/jni/" rnreanimated_autolinked_build)
 add_subdirectory("C:/Users/miche/Desktop/Bible_game1/node_modules/react-native-safe-area-context/android/src/main/jni/" safeareacontext_autolinked_build)
@@ -31,6 +32,7 @@ set(AUTOLINKED_LIBRARIES
   
   react_codegen_lottiereactnative
   react_codegen_rngesturehandler_codegen
+  react_codegen_RNGoogleMobileAdsSpec
   
   react_codegen_rnreanimated
   react_codegen_safeareacontext

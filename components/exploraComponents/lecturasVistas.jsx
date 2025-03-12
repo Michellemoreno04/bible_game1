@@ -20,7 +20,7 @@ export default function Lecturas() {
 
     try {
       const userRef = doc(db, 'users', userId);
-      const subCollectionRef = collection(userRef, 'lecturasDiarias');
+      const subCollectionRef = collection(userRef, 'lecturasVistas');
       
       const q = query(subCollectionRef, orderBy('fecha', 'desc'));
       const querySnapshot = await getDocs(q);

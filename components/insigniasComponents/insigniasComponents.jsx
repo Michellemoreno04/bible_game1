@@ -77,11 +77,11 @@ export const InsigniasComponent = ({ userInfo }) => {
 
 const styles = StyleSheet.create({
     badgesScroll: {
-        paddingVertical: 5,
-        paddingHorizontal: 15
+       // paddingVertical: 5,
+        //paddingHorizontal: 15
     },
     badgeContainer: {
-        
+        marginHorizontal: 8,
         shadowColor: '#FFD700',
         shadowOffset: { width: 0, height: 4 },
         shadowRadius: 15,
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         width: '200%',
         height: '200%',
-        opacity: 0.8
+        opacity: 0.8,
     },
     badgeIcon: {
         marginBottom: 20,
@@ -115,15 +115,19 @@ const styles = StyleSheet.create({
         transform: [{ rotateZ: '5deg' }]
     },
     badgeRibbon: {
+        width: '100%',
+       // height: 70,
         position: 'absolute',
         bottom: 0,
         width: '100%',
         paddingVertical: 12,
         alignItems: 'center',
         borderTopWidth: 2,
-        borderTopColor: '#FFD70050'
+        borderTopColor: '#FFD70050',
+        paddingHorizontal: 10,
     },
     badgeText: {
+        textAlign: 'center',
         color: '#FFD700',
         fontFamily: 'Arial',
         fontWeight: 'bold',

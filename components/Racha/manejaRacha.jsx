@@ -2,6 +2,7 @@ import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
 import { Alert } from 'react-native';
 
+
 export const manejarRachaDiaria = async (
   userId,
   setShowModalRacha,
