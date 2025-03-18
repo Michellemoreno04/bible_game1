@@ -1,6 +1,6 @@
 import { Link } from 'expo-router';
 import React, { useState } from 'react';
-import { View, TextInput, KeyboardAvoidingView, Text, Platform, Pressable, Alert, ScrollView,StyleSheet, Image, Linking, SafeAreaView } from 'react-native';
+import { View, TextInput, KeyboardAvoidingView, Text, Platform, Pressable, Alert, ScrollView,StyleSheet, Image, Linking, SafeAreaView,StatusBar as RNStatusBar } from 'react-native';
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import {auth,db} from '../components/firebase/firebaseConfig'
 import { useNavigation } from '@react-navigation/native';
@@ -12,9 +12,8 @@ import * as ImagePicker from 'expo-image-picker';
 
 
 
-
 const SignUp = () => {
-  const navigate = useNavigation();
+  
   const [credenciales, setCredenciales] = useState({
     name: '',
     email: '',
@@ -30,6 +29,8 @@ const SignUp = () => {
   const [rachaMaxima, setRachaMaxima] = useState(0);
   const [avatarType, setAvatarType] = useState(null);
   const [imageUri, setImageUri] = useState(null);
+
+  const navigate = useNavigation();
 
   const hoy = new Date(); 
     hoy.setHours(0, 0, 0, 0); // Establecer solo la fecha (sin hora)
@@ -344,14 +345,14 @@ return (
             </Pressable>
 
             {/* Sección de Redes Sociales */}
-            <View >
+            {/*<View >
               <View style={styles.divider}>
                 <View style={styles.dividerLine} />
                 <Text style={styles.dividerText}>Continúa con</Text>
                 <View style={styles.dividerLine} />
               </View>
               <SigninComponents />
-            </View>
+            </View>*/}
 
             {/* Enlace a Login */}
             <View style={styles.loginLink}>

@@ -1,23 +1,24 @@
 # Welcome to your Expo app 👋
 
 # Cosas pendientes
-1. Guardar las versiculos con todo e imagen
+1. 
 2. regenerar las keys de firebase y las de google por mayor seguridad
 3. mejorar el audio de lecturas
 4. borrar las keys de github
-5. Hacer el saveAreView para android
+5. 
 6. 
 7. 
 8. hacer login con google en ios tambien
-9. Freeze de racha: Proteger la racha por 1 día de inactividad (120 monedas).
-10. integrar State Management: Usa Context API o Zustand para mejor rendimiento
+9. 
+10. 
 11. 
 
 
 # Cosas Hechas
 
-1. android save area fixed
-2. aqui quite nativewind porque me estaba dando problemas solo en producion y apk (porque no se mostraban los estilos)
-3. añadi zustand a versiculos diarios y maneje la persistencia
-4. pequeña animacion para el quiz
-5. añadiendo anuncios 
+1. bugs arreglados
+2. funcion para Recuperar contraseña 
+3. funcionalidad para añadir vidas con ads
+4. solo reproducir sonido si esta en el compoenent de lectura
+5. notificaciones push añadidas con (nativenotify)
+6. ads para ios añadidos tambien 

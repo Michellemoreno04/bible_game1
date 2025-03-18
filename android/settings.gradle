@@ -21,7 +21,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
   }
 }
 
-rootProject.name = 'Bible_game1'
+rootProject.name = 'QuizBible'
 
 dependencyResolutionManagement {
   versionCatalogs {

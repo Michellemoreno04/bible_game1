@@ -12,7 +12,6 @@ import  {StatusBar} from 'expo-status-bar'
 
 
 function Login() {
-  const router = useRouter();
  
 const navigation = useNavigation();
 
@@ -71,8 +70,10 @@ const handleFirebaseError = (error) => {
       break;
     default:
       errorMessage = "Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo más tarde.";
-  }
+      break;
 
+    }
+    Alert.alert("Error de inicio de sesión", errorMessage);
   };
 
     
@@ -139,7 +140,9 @@ return (
                 onChangeText={(text) => handlerOnchange('password', text)}
               />
             </View>
-
+            <Link href="/resetPassWord" style={styles.signupLink}> 
+             <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
+            </Link>
               
             {/* Login Button */}
             <Pressable
@@ -152,13 +155,13 @@ return (
 
             {/* Social Login */}
             <View style={styles.socialContainer}>
-              <View style={styles.dividerContainer}>
+              {/*<View style={styles.dividerContainer}>
                 <View style={styles.dividerLine} />
                 <Text style={styles.dividerText}>Continúa con</Text>
                 <View style={styles.dividerLine} />
               </View>
 
-              <SigninComponents />
+              {/*<SigninComponents />*/}
             </View>
 
             {/* Signup Link */}

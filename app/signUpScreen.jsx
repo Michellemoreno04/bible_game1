@@ -68,7 +68,7 @@ export default function SignUpScreen() {
             </Pressable>
           </View>
 
-          <SigninComponents />
+         {/* <SigninComponents />*/}
         </View>
       </ScrollView>
       </SafeAreaView>

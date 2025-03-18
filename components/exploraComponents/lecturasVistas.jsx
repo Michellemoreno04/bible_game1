@@ -22,15 +22,15 @@ export default function Lecturas() {
       const userRef = doc(db, 'users', userId);
       const subCollectionRef = collection(userRef, 'lecturasVistas');
       
-      const q = query(subCollectionRef, orderBy('fecha', 'desc'));
+      const q = query(subCollectionRef, orderBy('fechaStr', 'desc'));
       const querySnapshot = await getDocs(q);
 
       const temasData = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        fecha: doc.data().fecha.toDate()
+       fecha: doc.data().fechaStr
       }));
-
+     
       setTemas(temasData);
       setFilteredLecturas(temasData); // Inicializar con todos los datos
     } catch (error) {
@@ -38,6 +38,7 @@ export default function Lecturas() {
     }
   }, [userId]);
 
+  
   // Filtrar lecturas según el texto de búsqueda
   useEffect(() => {
     if (searchQuery === '') {
@@ -88,11 +89,7 @@ export default function Lecturas() {
     >
       <Text style={styles.itemTitle}>{item.titulo || 'Lectura diaria'}</Text>
       <Text style={styles.itemDate}>
-        {item.fecha.toLocaleDateString('es-ES', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        })}
+        {item.fecha.split('T')[0]}
       </Text>
     </TouchableOpacity>
   );

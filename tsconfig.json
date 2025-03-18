@@ -14,5 +14,5 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
     
- "app/+not-found.jsx", "app/_layout.jsx", "app/(tabs)/index.jsx", "app/(tabs)/_layout.jsx", "app/(tabs)/profile.jsx"  ]
+ "app/+not-found.jsx", "app/_layout.jsx", "app/(tabs)/index.jsx", "app/(tabs)/_layout.jsx", "app/(tabs)/profile.jsx", "app/resetPassWord.jsx"  ]
 }

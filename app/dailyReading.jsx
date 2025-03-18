@@ -11,7 +11,10 @@ import { useToast } from 'react-native-toast-notifications';
 import { InterstitialAd, AdEventType, TestIds } from 'react-native-google-mobile-ads';
 
 
-const adUnitId = __DEV__ ? TestIds.INTERSTITIAL: process.env.EXPO_PUBLIC_INTERSTITIAL_ID; 
+const adUnitId = __DEV__ 
+? TestIds.INTERSTITIAL
+: Platform.OS === 'ios' ? process.env.EXPO_PUBLIC_INTERSTITIAL_ID_IOS 
+: process.env.EXPO_PUBLIC_INTERSTITIAL_ID_ANDROID; 
 
 // Crea la instancia del anuncio
 const interstitial = InterstitialAd.createForAdRequest(adUnitId, {
@@ -77,73 +80,91 @@ useEffect(() => {
   }
 
   // Efecto para obtener el texto de lectura
+  const getLocalDateString = () => {
+    const date = new Date();
+    return `${date.getFullYear()}-${(date.getMonth() + 1)
+      .toString()
+      .padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+  };
+  
+// Efecto para obtener el texto de lectura
   useEffect(() => {
-    const fetchReadingText = async () => {
+    const fetchDailyVerse = async () => {
       try {
-        // 1. Se referencia el documento del usuario y la subcolección "lecturasVistas"
+ const today = getLocalDateString();
+    // Recupera la última fecha guardada (si existe)
+    const lastDate = await AsyncStorage.getItem('lastReadingDate');
+
+        // 3. Si ya se leyó el versículo de hoy, no hagas nada
+        if (lastDate === today) {
+          console.log('Ya se ha mostrado el texto de hoy.');
+         return;
+        }
+
+        // 4. Referencia al documento del usuario y la subcolección "lecturasVistas"
         const userDocRef = doc(db, 'users', user?.uid);
         const lecturasVistasRef = collection(userDocRef, 'lecturasVistas');
 
-        // 2. Se consulta la última lectura vista ordenando por "index" de forma descendente
+        // 5. Consulta la última lectura vista ordenando por "index" de forma descendente
         const lastReadQuery = query(lecturasVistasRef, orderBy('index', 'desc'), limit(1));
         const lastReadSnapshot = await getDocs(lastReadQuery);
 
-        // 3. Se obtiene el índice de la última lectura o se inicia en 0 si no hay lecturas previas
         let lastIndex = 0;
         if (!lastReadSnapshot.empty) {
           lastIndex = lastReadSnapshot.docs[0].data().index;
         }
 
-        // 4. Se consulta la siguiente lectura en base al índice
-        const lecturasQuery = query(
-          lecturasVistasRef,
-          orderBy('index'),
-          startAfter(lastIndex),
-          limit(1)
-        );
-        let lecturasSnapshot = await getDocs(lecturasQuery);
-        let nuevasLecturas = [];
 
-        // 5. Si no hay lecturas en "lecturasVistas", se consulta la colección de contenido diario
-        if (lecturasSnapshot.empty) {
-          const dailyContentRef = collection(db, 'dailyRearingContent');
-          const dailyQuery = query(dailyContentRef, limit(1));
-          lecturasSnapshot = await getDocs(dailyQuery);
-          nuevasLecturas = lecturasSnapshot.docs.map((doc) => ({
-            lecturaId: doc.id,
-            ...doc.data(),
-          }));
-        } else {
-          nuevasLecturas = lecturasSnapshot.docs.map((doc) => ({
-            lecturaId: doc.id,
-            ...doc.data(),
-          }));
-        }
+  // Consulta en la colección dailyRearingContent la lectura cuyo índice sea mayor al último guardado
+    const dailyContentRef = collection(db, 'dailyRearingContent');
+    const dailyQuery = query(
+      dailyContentRef,
+      orderBy('index'),
+      where('index', '>', lastIndex),
+      limit(1)
+    );
+    const dailySnapshot = await getDocs(dailyQuery);
 
-        // 6. Se actualiza el estado con la lectura obtenida
-        setReadingText(nuevasLecturas);
-      } catch (error) {
-        console.error('Error al obtener el texto de lectura:', error);
-      }
-    };
+    if (!dailySnapshot.empty) {
+      const nextReading = dailySnapshot.docs.map((doc) => ({
+        lecturaId: doc.id,
+        ...doc.data(),
+      }));
+      setReadingText(nextReading);
+      
+    } else {
+      console.log('No hay nuevas lecturas disponibles en dailyRearingContent.');
+    }
+  } catch (error) {
+    console.error('Error al obtener la siguiente lectura:', error);
+  }
+};
+    
+      fetchDailyVerse();
+    
+  }, []);
 
-    fetchReadingText();
-  }, [user]);
+
 
   // Función para reproducir el texto con Speech
   const handleSpeak = () => {
+// aqui vamos hacer que si el usuario sale de del componente se pare la lectura
     if (readingText.length === 0) return;
+// Limpiar cualquier reproducción pendiente antes de iniciar una nueva
+      Speech.stop();
+
     // Se combina el título y el texto para reproducirlos
     const textToSpeak = `${readingText[0].titulo}. ${readingText[0].texto}`;
 
     if (!isSpeaking) {
       Speech.speak(textToSpeak, {
         language: 'es',
-        pitch: 0.7,
-        rate: 0.8,
+        pitch: 0.9,
+        rate: 0.9, // Velocidad de lectura
         onStart: () => setIsSpeaking(true),
         onDone: () => setIsSpeaking(false),
         onStopped: () => setIsSpeaking(false),
+        onError: () => setIsSpeaking(false), // Manejar errores
       });
     } else {
       Speech.stop();
@@ -151,58 +172,57 @@ useEffect(() => {
     }
   };
 
+  // Detener la reproducción al desmontar el componente
+  useEffect(() => {
+    return () => {
+      Speech.stop();
+    };
+  }, []);
+
   // Función para alternar el estado del checkbox
   const handleCheckbox = () => {
     setIsChecked(!isChecked);
   };
 
-  // Función para obtener la fecha local en formato YYYY-MM-DD
-  const getLocalDateString = () => {
-    const date = new Date();
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-  };
-
+  
   // Función para guardar la lectura en la subcolección "lecturasVistas"
   const handleReading = async () => {
+   
     try {
       const today = getLocalDateString();
       const userRef = doc(db, 'users', userId);
-      // Usar la misma subcolección para guardar la lectura ya vista
       const lecturasVistasRef = collection(userRef, 'lecturasVistas');
+  
 
-      // Verificar si ya existe una lectura con el mismo título en el día de hoy
-      const q = query(
-        lecturasVistasRef,
-        where('fechaStr', '==', today),
-        where('titulo', '==', readingText[0].titulo)
-      );
-      const snapshot = await getDocs(q);
-      if (!snapshot.empty) {
-        Alert.alert('¡Ya guardaste esta lectura hoy!');
-        return;
-      }
+     // Verificar si ya existe una lectura guardada para hoy
+    const q = query(lecturasVistasRef, where('fechaStr', '==', today));
+    const snapshot = await getDocs(q);
+    if (!snapshot.empty) {
+      Alert.alert('¡Ya guardaste esta lectura hoy!');
+      return;
+    }
 
       // Guardar la lectura en la subcolección con los datos necesarios
       await addDoc(lecturasVistasRef, {
         index: readingText[0].index,
         titulo: readingText[0].titulo,
-        lectura: readingText[0].texto,
-        fecha: new Date(),
         fechaStr: today,
       });
-      const fechaActual = new Date().toDateString();
-      await AsyncStorage.setItem("lastReadingDate", fechaActual);
-      console.log('last reading date saved:', today);
+
+      // Guardar la fecha actual en AsyncStorage usando el mismo formato
+    await AsyncStorage.setItem('lastReadingDate', today);
+
       toast.show('Guardado', 'La lectura se ha guardado con éxito.', {
         type: 'success',
         duration: 2000,
         placement: 'top',
       });
       setIsSpeaking(false);
-      
-
       setIsChecked(false);
       showInterstitial(); // Mostrar el anuncio
+
+      
+
     } catch (error) {
       console.error('Error al guardar:', error);
       Alert.alert('Error', 'No se pudo guardar la lectura');
@@ -223,7 +243,14 @@ useEffect(() => {
   };
 
   if (readingText.length === 0) {
-    return <ActivityIndicator size="large" color="#007AFF" />;
+    
+   
+    return (
+      <View style={styles.emptyContainer}>
+         <Feather name="book-open" size={60} color="gray" />
+          <Text style={styles.emptySubtext}>No hay lecturas disponibles</Text>
+      </View>
+    );
   }
 
 
@@ -412,6 +439,19 @@ useEffect(() => {
       fontWeight: '600',
       color: 'white',
       marginLeft: 10,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    
+    },
+    emptySubtext: {
+      color: 'rgba(255,255,255,0.4)',
+      fontSize: 14,
+      marginTop: 8,
+      textAlign: 'center',
+      color: 'gray',
     },
   });
   

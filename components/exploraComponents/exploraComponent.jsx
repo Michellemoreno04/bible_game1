@@ -63,9 +63,9 @@ const ExploraComponent = () => {
  }
    
     if (lastReadingDate !== today) {
-      setHasReadTheDailyVerse(false);
-    } else {
       setHasReadTheDailyVerse(true);
+    } else {
+      setHasReadTheDailyVerse(false);
       
     }
     

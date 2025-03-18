@@ -68,6 +68,15 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
+              name="resetPassWord"
+              options={{
+                headerShown: true,
+                headerTransparent: true,
+                headerTitle: "",
+                headerTintColor: "#fff",
+              }}
+            />
+            <Stack.Screen
               name="signUp"
               options={{
                 headerShown: true,

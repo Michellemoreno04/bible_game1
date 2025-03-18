@@ -293,7 +293,7 @@ return (
       minHeight: 235, // Altura aumentada
 //backgroundColor: "black",
       //opacity: 0.5,
-      borderRadius: 20,
+   // borderRadius: 20,
       justifyContent: 'center',
       alignContent: 'center'
     },

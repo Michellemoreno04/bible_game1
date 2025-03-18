@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ImageBackground, Animated,Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ImageBackground, Animated,Platform, ActivityIndicator } from 'react-native';
 import { AntDesign, FontAwesome5, MaterialCommunityIcons, Octicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,9 +16,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NivelModal from '@/components/Modales/modalNivel';
 import { niveles } from '@/components/Niveles/niveles';
 import { InterstitialAd, AdEventType, TestIds } from 'react-native-google-mobile-ads';
+import RewardedAdModal from '../components/Modales/modalNotVidas';
 
 
-const adUnitId = __DEV__ ? TestIds.INTERSTITIAL: process.env.EXPO_PUBLIC_INTERSTITIAL_ID; 
+const adUnitId = __DEV__
+ ? TestIds.INTERSTITIAL
+ : Platform.OS === 'ios'
+ ? process.env.EXPO_PUBLIC_INTERSTITIAL_ID_IOS
+ : process.env.EXPO_PUBLIC_INTERSTITIAL_ID_ANDROID; 
 
 // Crea la instancia del anuncio
 const interstitial = InterstitialAd.createForAdRequest(adUnitId, {
@@ -44,8 +49,8 @@ const BibleQuiz = () => {
   const [expGanada, setExpGanada] = useState(0);
   const [preguntasRespondidas, setPreguntasRespondidas] = useState([]);
   const [showNivelModal, setShowNivelModal] = useState(false);
-  const [lastDoc, setLastDoc] = useState([]);
   const [interstitialLoaded, setInternitialLoaded] = useState(false);
+  const [showModalNotVidas, setShowModalNotVidas] = useState(false);
   const { user } = useAuth();
   const userId = user?.uid;
 
@@ -69,12 +74,16 @@ const BibleQuiz = () => {
         if (Platform.OS === 'ios') {
           StatusBar.setHidden(false)
         }
+        setShowModal(false);
+        
       });
   
       // Start loading the interstitial straight away
       interstitial.load();
+  
+      
  
-      console.log('interstitial cargado')
+      console.log('interstitial en el quiz')
 
     // Unsubscribe from events on unmount
     return () => {
@@ -85,7 +94,7 @@ const BibleQuiz = () => {
   } catch (error) {
     console.log(error)
         }
-  }, []);
+  }, [ interstitial ]);
 
   // mostrar los anuncios
   const showAds = () => {
@@ -94,8 +103,9 @@ const BibleQuiz = () => {
 
       interstitial.addAdEventListener(AdEventType.CLOSED, () => {
         
+        setShowModal(false);
+        mostrarModalRacha();
         navigation.navigate('(tabs)'); // Redirigir a Home después de cerrar el anuncio
-        // showModal(false);
       });
 
     } else {
@@ -198,7 +208,7 @@ const BibleQuiz = () => {
     });
 
     return () => unsubscribe();
-  }, [user?.uid]);
+  }, [userId]);
 
   const pregunta = questions[currentQuestion]?.question;
   const referencia = questions[currentQuestion]?.bibleReference;
@@ -319,7 +329,7 @@ useEffect(() => {
             Alert.alert('Error', 'No se pudieron actualizar las vidas.');
           }
         } else {
-          Alert.alert('No tienes más vidas. El juego ha terminado.');
+          setShowModalNotVidas(true);
 
           await updateDoc(userDocRef, {
             Monedas: userInfo.Monedas + monedasGanadas,
@@ -328,7 +338,7 @@ useEffect(() => {
           const today = new Date().toDateString();
           await AsyncStorage.setItem("lastQuizDate", today);
           console.log('Fecha del último quiz guardada:', today);
-          setShowModal(true);
+         // setShowModal(true);
           stopMusic();
         }
       }, 2000);
@@ -421,57 +431,99 @@ useEffect(() => {
       {
         text: 'Terminar',
         onPress: () => {
-          navigation.replace('(tabs)');
+          showAds();
         },
       },
     ]);
   };
 
+  // Resetear el estado cuando cambia la pregunta
   useEffect(() => {
+    setMostrarRespuestaCorrecta(false);
+    setRespuestaSeleccionada(null); // Asegurar doblemente el reset
+  }, [currentQuestion]);
+
+  // sonido
+  useEffect(() => {
+    if(!userId) return null;
+    
     const backgroundMusic = require('../assets/sound/quiz-music1.mp3');
-
-    if (navigation.addListener('focus', () => startMusic(backgroundMusic)));
-
-    return () => {
-      stopMusic();
-    };
+ 
+     navigation.addListener('focus', () => {
+      startMusic(backgroundMusic);
+     })
+    
+     navigation.addListener('blur', () => {
+      stopMusic(); // Detiene la música al salir de la pantalla
+    });
+  
+   return () => {
+     stopMusic();
+   }
+    
   }, []);
 
+
   if (!userId) {
-    return;
+   return <ActivityIndicator size="large" />
   }
 
 
 // Animaciones
-  useEffect(() => {
-    // Reiniciar animaciones cuando cambia la pregunta
-    questionOpacity.setValue(0);
-    const newAnimations = respuestas.map(() => new Animated.Value(0));
-    setAnswerAnimations(newAnimations);
+useEffect(() => {
+  // Resetear animaciones y estados visuales
+  questionOpacity.setValue(0);
+  setMostrarRespuestaCorrecta(false);
+  setRespuestaSeleccionada(null);
 
-    // Animación para la pregunta
-    Animated.timing(questionOpacity, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start(() => {
-      // Animación para respuestas después de 2 segundos
-      setTimeout(() => {
-        newAnimations.forEach((anim, index) => {
-          Animated.timing(anim, {
-            toValue: 1,
-            duration: 500,
-            delay: index * 200,
-            useNativeDriver: true,
-          }).start();
-        });
-      }, 2000);
+  const newAnimations = respuestas.map(() => new Animated.Value(0));
+  setAnswerAnimations(newAnimations);
+
+  Animated.timing(questionOpacity, {
+    toValue: 1,
+    duration: 500,
+    useNativeDriver: true,
+  }).start(() => {
+    newAnimations.forEach((anim, index) => {
+      Animated.timing(anim, {
+        toValue: 1,
+        duration: 500,
+        delay: index * 200,
+        useNativeDriver: true,
+      }).start();
     });
-  }, [pregunta]);
+  });
+}, [currentQuestion, pregunta]); // Añadir currentQuestion como dependencia
 
   if (!interstitial) {
     return null;
   } 
+
+  const addLive = async () => {
+    const userDocRef = doc(db, 'users', userId);
+
+    try {
+      await updateDoc(userDocRef, {
+        Vidas: userInfo.Vidas + 1,
+      });
+    } catch (error) {
+      console.error('Error al actualizar las vidas:', error);
+      Alert.alert('Error', 'No se pudieron actualizar las vidas.');
+    } finally {
+      setCurrentQuestion(currentQuestion + 1);
+      setRespuestaSeleccionada(null);
+    
+      
+    }
+  }
+
+  
+  // Función para cerrar el modal de recompensade vidas
+  const cerrarRewardModal = () => {
+    setShowModalNotVidas(false);
+    setShowModal(true);
+
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -479,7 +531,7 @@ useEffect(() => {
       <ModalRacha userInfo={userInfo} isVisible={showModalRacha} setShowModalRacha={setShowModalRacha} />
       <ModalRachaPerdida userInfo={userInfo} isVisible={showModalRachaPerdida} setShowModalRachaPerdida={setShowModalRachaPerdida} />
       <NivelModal Exp={userInfo.Exp} nivel={userInfo?.Nivel} isVisible={showNivelModal} onClose={() => setShowNivelModal(false)}/>
-
+      <RewardedAdModal isVisible={showModalNotVidas} onClose={cerrarRewardModal} addLife={addLive }  />
         
 <ImageBackground 
         source={require('../assets/images/bg-quiz.png')} 
@@ -528,23 +580,24 @@ useEffect(() => {
           </Animated.View>
 
 
-            <View style={styles.answersContainer}>
+            <View style={styles.answersContainer}  key={questions[currentQuestion]?.questionId}>
               {respuestas.map((respuesta, index) => {
-                const isSelected = respuestaSeleccionada === respuesta;
-                const isCorrect = mostrarRespuestaCorrecta && respuesta === correcta;
-                const isIncorrect = mostrarRespuestaCorrecta && respuesta !== correcta;
-                
+                //const isSelected = respuestaSeleccionada === respuesta;
+                //const isCorrect = mostrarRespuestaCorrecta && respuesta === correcta;
+                //const isIncorrect = mostrarRespuestaCorrecta && respuesta !== correcta;
+                const uniqueKey = `${questions[currentQuestion]?.questionId}-${index}`;
                 return (
                   <Animated.View
-                  key={index}
+                  key={uniqueKey}
                   style={{ opacity: answerAnimations[index] || 0 }}
                 >
-                  <TouchableOpacity
-                    style={[
-                      styles.answerButton,
-                      isSelected && styles.selectedAnswer,
-                      isCorrect && styles.correctAnswer,
-                      isIncorrect && styles.incorrectAnswer
+                  <TouchableOpacity 
+                      style={[
+                        styles.answerButton,
+                        respuestaSeleccionada === respuesta && styles.selectedAnswer,
+                        mostrarRespuestaCorrecta && respuesta === correcta && styles.correctAnswer,
+                        mostrarRespuestaCorrecta && respuesta !== correcta && styles.incorrectAnswer
+                     
                     ]}
                     onPress={() => setRespuestaSeleccionada(respuesta)}
                     disabled={mostrarRespuestaCorrecta}
@@ -682,13 +735,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 4,
     borderWidth: 2,
-    borderColor: '#gray',
-    padding: 20,
+  
+  
   },
   selectedAnswer: {
     borderWidth: 4,
     borderColor: '#00FF00',
-    
+    backgroundColor: 'rgba(0, 255, 0, 0.3)'
   },
   correctAnswer: {
     borderWidth: 2,

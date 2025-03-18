@@ -45,7 +45,8 @@ export function useBackgroundMusic() {
         isLooping: true,
       });
       setMusic(sound);
-     // console.log('Playing Background Music');
+
+      console.log('Playing Background Music');
     } catch (error) {
       console.error('Error playing background music:', error);
     }
