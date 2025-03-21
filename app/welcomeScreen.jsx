@@ -1,9 +1,13 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, StatusBar, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, StatusBar, Platform, ScrollView } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
-import { Button } from 'react-native-web';
+
+
+const { width, height } = Dimensions.get('window');
+
+
 
 const WelcomeScreen = () => {
   const navigation = useNavigation();
@@ -14,10 +18,10 @@ const WelcomeScreen = () => {
   const { width } = Dimensions.get('window');
 
   const features = [
-    { icon: '📖', title: 'Planes Estructurados', desc: 'Seguimiento progresivo de estudios bíblicos para profundizar en tu conocimiento día a día.' },
-    { icon: '✝️', title: 'Análisis Profundo', desc: 'Desglose detallado de versículos clave que te ayudarán a comprender el mensaje divino.' },
-    { icon: '🕊️', title: 'Devocionales', desc: 'Crea reflexiones personalizadas para fortalecer tu relación con Dios a través de la meditación diaria.' },
-    { icon: '🎓', title: 'Cuestionarios', desc: 'Refuerza tu aprendizaje con ejercicios interactivos diseñados para consolidar tu conocimiento bíblico.' },
+    { icon: '📖', title: 'Versiculos Diarios', desc: 'Para que compartas con tus amistades y vayas profundizando con las palabras de Dios. ' },
+    { icon: '✝️', title: 'Preguntas Sobre La Biblia', desc: 'Asi vas reforzando tus conocimientos con preguntas y respuestas de la Biblia. ' },
+    { icon: '🕊️', title: 'Lecturas Diarias', desc: 'Tambien vas a leer sobre temas importantes como el Amor, la Fe y muchos temas de grande importancia. ' },
+    { icon: '🎓', title: 'Control de Estudios Diarios', desc: 'Diariamente que estudies estaras aumentado una racha que te mantendra motivado estudiando y aprendiendo todos los dias. ' },
   ];
 
   React.useEffect(() => {
@@ -78,6 +82,7 @@ const WelcomeScreen = () => {
       colors={['#f0f7ff', '#d6ebff']}
       style={styles.container}
     >
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       
       <Animated.View style={[styles.headerContainer, { opacity: fadeAnim }]}>
@@ -179,11 +184,13 @@ const WelcomeScreen = () => {
       </View>
 
       <Text style={styles.footerText}>Únete a miles de creyentes en esta jornada espiritual</Text>
+
+      </ScrollView>
     </LinearGradient>
   );
 };
 
-const { width, height } = Dimensions.get('window');
+
 
 const styles = StyleSheet.create({
   container: {
@@ -198,7 +205,7 @@ const styles = StyleSheet.create({
   },
   animation: {
     width: width * 0.8,
-    height: 220,
+    height: height * 0.3,
     alignSelf: 'center',
   },
   title: {
@@ -207,8 +214,8 @@ const styles = StyleSheet.create({
     color: '#1A3E5A',
     textAlign: 'center',
     fontFamily: 'Poppins-Bold',
-    lineHeight: 38,
-    marginBottom: 12,
+    lineHeight: 35,
+    marginBottom: 5,
     textShadowColor: 'rgba(26, 62, 90, 0.1)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
@@ -217,7 +224,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: '#5A7C95',
     textAlign: 'center',
-    marginBottom: 25,
+    marginBottom: 5,
     fontFamily: 'Poppins-Medium',
     lineHeight: 24,
     paddingHorizontal: 20,
@@ -229,7 +236,7 @@ const styles = StyleSheet.create({
   },
   featureCard: {
     width: '100%',
-    borderRadius: 25,
+    borderRadius: 20,
     shadowColor: '#3B71C3',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.12,
@@ -238,9 +245,9 @@ const styles = StyleSheet.create({
   },
   gradientCard: {
     borderRadius: 25,
-    padding: 25,
-    minHeight: height * 0.3,
-    justifyContent: 'space-between',
+    padding: 15,
+   // minHeight: height * 0.3,
+   // justifyContent: 'space-between',
   },
   featureContent: {
     alignItems: 'center',
@@ -251,7 +258,7 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
     elevation: 3,
   },
   featureIcon: {
@@ -262,7 +269,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: '#1A3E5A',
     fontFamily: 'Poppins-SemiBold',
-    marginBottom: 15,
+    marginBottom: 5,
     textAlign: 'center',
   },
   featureDesc: {
@@ -275,7 +282,7 @@ const styles = StyleSheet.create({
   indicatorContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 30,
+    marginTop: 10,
   },
   indicator: {
     width: 10,
@@ -289,7 +296,7 @@ const styles = StyleSheet.create({
     width: 20,
   },
   buttonsContainer: {
-    marginTop: 30,
+    marginTop: 20,
     alignItems: 'center',
   },
   navigationButtons: {

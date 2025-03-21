@@ -19,6 +19,7 @@ import { db } from '../components/firebase/firebaseConfig';
 import useAuth from '../components/authContext/authContext';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from 'expo-router';
+import { useToast } from 'react-native-toast-notifications';
 
 const EditProfileScreen = () => {
   const navigation = useNavigation();  
@@ -31,6 +32,8 @@ const EditProfileScreen = () => {
   });
   const [loading, setLoading] = useState(false);
 
+  const toast = useToast();
+
   // Cargar datos actuales del usuario
   useEffect(() => {
     if (user) {
@@ -42,13 +45,13 @@ const EditProfileScreen = () => {
     }
   }, [user]);
 
-  // Función para actualizar todos los datos del perfil (se llama al presionar "Guardar")
+
   const handleUpdate = async () => {
     try {
       setLoading(true);
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, formData);
-      Alert.alert('Éxito', 'Perfil actualizado correctamente');
+      toast.show('Perfil actualizado', { type: 'success' });
       navigation.goBack();
     } catch (error) {
       Alert.alert('Error', 'No se pudo actualizar el perfil');
@@ -91,12 +94,17 @@ const takePhoto = async () => {
       return null;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 1,
-      });
+     // 2. Abrir la cámara para tomar una foto
+     const result = await ImagePicker.launchCameraAsync({
+      // Se especifica que solo se desean imágenes
+      mediaTypes: ['images'],
+      // Permitir edición de la imagen después de capturarla
+      allowsEditing: true,
+      // Aspecto cuadrado [ancho, alto] para que la imagen se corte en 1:1
+      aspect: [1, 1],
+      // Calidad máxima de la imagen
+      quality: 1,
+    });
 
     if (result.canceled) return null;
     return result.assets[0].uri;
@@ -116,6 +124,7 @@ const handleImageSelection = async () => {
       {
         text: "Tomar foto",
         onPress: async () => {
+          // Se llama a la función takePhoto que abrirá la cámara
           const uri = await takePhoto();
           if (uri) updateProfileImage(uri);
         }
@@ -226,7 +235,7 @@ const removeImage = async () => {
             style={styles.input}
             value={formData.Apodo}
             onChangeText={(text) => setFormData({...formData, Apodo: text})}  
-            placeholder="Ej: juan123"
+            placeholder="Ej: seguidor de la palabra"
           />
         </View>
 
@@ -239,7 +248,7 @@ const removeImage = async () => {
             placeholder="Cuéntanos sobre ti..."
             multiline={true}
             numberOfLines={4} // Número inicial de líneas visibles
-            autoFocus
+           
           />
         </View>
       </ScrollView>

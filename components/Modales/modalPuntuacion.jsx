@@ -1,16 +1,80 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Dimensions,Platform  } from 'react-native';
 import Modal from 'react-native-modal';
 import LottieView from 'lottie-react-native';
 import { FontAwesome5, FontAwesome6 } from '@expo/vector-icons';
 import { Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSound } from '../soundFunctions/soundFunction';
+import { RewardedAd, RewardedAdEventType, TestIds } from 'react-native-google-mobile-ads';
 
-const { width } = Dimensions.get('window');
-export function ModalPuntuacion({ isVisible, onClose, respuestasCorrectas, expGanada, monedasGanadas,userInfo,showAds }) {
-   const playSound = useSound();
- 
+const adUnitId = __DEV__ 
+? TestIds.REWARDED 
+: Platform.OS === 'ios' ? process.env.EXPO_PUBLIC_REWARDED_ID_IOS 
+: process.env.EXPO_PUBLIC_REWARDED_ID_ANDROID;
+
+
+
+export function ModalPuntuacion({ isVisible, respuestasCorrectas, expGanada, monedasGanadas,userInfo,cerrar,mostrarModalRacha}) {
+        const [loaded, setLoaded] = useState(false);
+       const [rewardedAd, setRewardedAd] = useState(null);
+       
+  
+  
+  const playSound = useSound();
+
+useEffect(() => {
+    if (isVisible) {
+      // Crear nueva instancia cada vez que se abre el modal
+      const newRewarded = RewardedAd.createForAdRequest(adUnitId, {
+        keywords: ['religion', 'bible'],
+      });
+      
+      const unsubscribeLoaded = newRewarded.addAdEventListener(
+        RewardedAdEventType.LOADED,
+        () => {
+          setLoaded(true);
+          console.log('Anuncio recompensa cargado correctamente');
+        }
+      );
+
+      const unsubscribeEarned = newRewarded.addAdEventListener(
+        RewardedAdEventType.EARNED_REWARD,
+        (reward) => {
+          console.log('Recompensa obtenida:', reward);
+           
+        }
+      );
+      // Cargar el anuncio
+      newRewarded.load();
+      setRewardedAd(newRewarded);
+
+      // Limpiar al cerrar
+      return () => {
+        unsubscribeLoaded();
+        unsubscribeEarned();
+        setLoaded(false);
+        setRewardedAd(null);
+      };
+    }
+  }, [isVisible]);
+
+  const handleShowAd = async () => {
+    if (loaded && rewardedAd) {
+      try {
+        await rewardedAd.show();
+
+      } catch (error) {
+        console.log('Error al mostrar el anuncio:', error);
+        
+      } finally {
+        cerrar();
+        mostrarModalRacha();
+      }
+
+    }
+  };
+    
    useEffect(() => {
      if (isVisible) {
        playSound(require('../../assets/sound/goodresult.mp3'));
@@ -77,12 +141,12 @@ export function ModalPuntuacion({ isVisible, onClose, respuestasCorrectas, expGa
              </View>
            </View>
  
-           <Pressable onPress={showAds} style={styles.buttonContainer}>
+           <Pressable onPress={loaded ? handleShowAd : null} style={styles.buttonContainer}>
              <LinearGradient
                colors={['#ff6b6b', '#ff8e53']}
                style={styles.buttonGradient}
              >
-               <Text style={styles.buttonText}> Volver al inicio</Text>
+               <Text style={styles.buttonText}>{loaded ? 'Volver al inicio' : 'Obteniendo recompensas...'}</Text>
              </LinearGradient>
            </Pressable>
          </View>
@@ -94,6 +158,7 @@ export function ModalPuntuacion({ isVisible, onClose, respuestasCorrectas, expGa
  const styles = StyleSheet.create({
    gradientContainer: {
      width: '100%',
+     
      borderRadius: 25,
      overflow: 'hidden',
    },
@@ -156,16 +221,16 @@ export function ModalPuntuacion({ isVisible, onClose, respuestasCorrectas, expGa
      fontSize: 32,
      fontWeight: '800',
      color: '#4a148c',
-     marginTop: -20,
+     marginTop: -30,
      fontFamily: 'Inter-Black',
      textAlign: 'center',
    },
    confettiEffect: {
      position: 'absolute',
-     top: -30,
+     top: 0,
      left: -30,
      right: -30,
-     bottom: -30,
+     bottom: -10,
      backgroundColor: 'rgba(255, 223, 0, 0.1)',
      borderRadius: 50,
    },
@@ -173,7 +238,7 @@ export function ModalPuntuacion({ isVisible, onClose, respuestasCorrectas, expGa
      flexDirection: 'row',
      justifyContent: 'center',
      gap: 35,
-     marginVertical: 20,
+     marginVertical: 10,
    },
    rewardItem: {
      alignItems: 'center',
@@ -181,7 +246,7 @@ export function ModalPuntuacion({ isVisible, onClose, respuestasCorrectas, expGa
    iconContainer: {
      padding: 18,
      borderRadius: 25,
-     marginBottom: 15,
+    
      shadowColor: '#000',
      shadowOffset: { width: 0, height: 4 },
      shadowOpacity: 0.3,
@@ -192,7 +257,6 @@ export function ModalPuntuacion({ isVisible, onClose, respuestasCorrectas, expGa
      fontSize: 26,
      fontWeight: '900',
      color: '#4a148c',
-     marginBottom: 4,
      fontFamily: 'Inter-Black',
    },
    rewardLabel: {
@@ -202,7 +266,7 @@ export function ModalPuntuacion({ isVisible, onClose, respuestasCorrectas, expGa
    },
    progressContainer: {
      width: '90%',
-     marginVertical: 20,
+     marginVertical: 10,
    },
    progressText: {
      fontSize: 16,
@@ -225,7 +289,7 @@ export function ModalPuntuacion({ isVisible, onClose, respuestasCorrectas, expGa
    },
    buttonContainer: {
      width: '100%',
-     marginTop: 15,
+     marginTop: 5,
      shadowColor: '#ff6b6b',
      shadowOffset: { width: 0, height: 4 },
      shadowOpacity: 0.4,

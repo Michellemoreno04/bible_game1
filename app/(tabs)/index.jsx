@@ -1,87 +1,122 @@
-import { View, StyleSheet,Linking, SafeAreaView, ScrollView, ActivityIndicator, Platform,  StatusBar as RNStatusBar, Alert } from 'react-native';
+import { View, StyleSheet, SafeAreaView, ScrollView, ActivityIndicator, Platform,  StatusBar as RNStatusBar, Alert, Button } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import {VersiculosDiarios} from '@/components/VersiculoDiario/versiculoDiario';
-import NivelModal from '@/components/Modales/modalNivel';
 import { LinearGradient } from 'expo-linear-gradient';
 import {HeaderHome} from '@/components/headerHome/headerHome';
 import ExploraComponent from '@/components/exploraComponents/exploraComponent';
 import GuardadosComponents from '@/components/exploraComponents/guardadosComponents';
 import { StatusBar } from 'expo-status-bar';
-import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import  useAuth  from '@/components/authContext/authContext';
+import {AdBanner} from '@/components/ads/banner';
+import {NotVidasModal} from '@/components/Modales/notVidasModal';
+import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { db } from '@/components/firebase/firebaseConfig';
-import { doc, onSnapshot } from 'firebase/firestore';
-import registerNNPushToken from 'native-notify';
-import * as Notifications from 'expo-notifications';
-// app-privacy-policy.com
-const adUnitId = __DEV__
-  ? TestIds.ADAPTIVE_BANNER
-  : Platform.OS === 'ios'
-  ? process.env.EXPO_PUBLIC_BANNER_ID_IOS
-  : process.env.EXPO_PUBLIC_BANNER_ID_ANDROID;
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+//import * as Notification from 'expo-notifications';
+//import { useNotification } from '@/components/notificationContext/notificationContext';
 
 export default function AppComponent() {
-  registerNNPushToken ( 28331 , ' R6WYRgvLqd0UbMTJR5Ja8b ');
-
-/*
-// Reemplaza el código comentado con esto
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
-*/
-
+  
+ // const { notification, expoPushToken, error } = useNotification();
   const { user } = useAuth();
   const userId = user?.uid;
-  const [userAuthenticated, setUserAuthenticated] = useState({});
-
-  // check user authenticated
-useEffect(() => {
-  if (!userId) return;
-  const userRef = doc(db, 'users', userId);
-  const unsubscribe = onSnapshot(userRef, (snapshot) => {
-    const userData = snapshot.data() || {};
-    setUserAuthenticated(userData);
-   
+  const [isNotVidasModalVisible, setNotVidasModalVisible] = useState(false);
+  const [userLife, setUserLife] = useState(null);
+ 
+/*
+  Notification.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true, // determina si se muestra una alerta al usuario
+      shouldPlaySound: true, // determina si se reproduce un sonido
+      shouldSetBadge: false, // determina si se actualiza el badge del icono de la app
+      
+    }),
   });
 
-  return () => unsubscribe();
+  useEffect(() => {
+    registerApp();
+  }, []);
 
-}, []);
-/*
-// Función para solicitar permiso de notificaciones
-const registerForPushNotifications = async () => {
-  try {
-    const { status } = await Notifications.requestPermissionsAsync();
+  async function registerApp(){
+try {
+
+    const { status: newStatus  } = await Notification.requestPermissionsAsync();
+
+    if (newStatus !== 'granted') {
+      Alert.alert('Permiso requerido', 'Se necesita acceso a la notificaciones para recibir notificaciones de la app.');
+    // Manejar estado de permisos denegados ....
     
-    if (status !== 'granted') {
-      Alert.alert(
-        'Permisos requeridos',
-        'Habilita las notificaciones para recibir actualizaciones y versículos diarios',
-        [
-          {
-            text: 'Configuración',
-            onPress: () => Linking.openSettings(),
-          },
-          { 
-            text: 'Cancelar', 
-            style: 'cancel' 
-          }
-        ]
-      );
+      return;
     }
-  } catch (error) {
-    console.error('Error en notificaciones:', error);
-  }
-};
 
-useEffect(() => {
-  registerForPushNotifications();
-}, []);
+    const token = (await Notification.getExpoPushTokenAsync({
+      projectId: 'e83e168f-b5c9-4951-a256-5cca2f43fe9f', // app id
+    })).data;
+
+    console.log('token es ',token);
+
+  } catch (error) {
+    console.log(error);
+  }
+  }
+
+  async function sendPushNotification( ) {
+    await Notification.scheduleNotificationAsync({
+      content: {
+        title: 'Notificacion de prueba',
+        body: 'NotificacionN ',
+         data: { type: 'weekly_progress' }, // la data es para poder identificar la notificacion
+      },
+      trigger: { seconds: 5 },
+    })
+  }
 */
+useEffect(() => {
+  if (!userId) {
+    setUserLife(null); // Limpia el estado relacionado con el usuario
+    return;
+  }
+
+  const dbRef = doc(db, 'users', userId);
+  let unsubscribe; // Variable para almacenar la función de desuscripción
+
+  const setupSnapshotListener = async () => {
+    try {
+      
+      const lastLostLifeDate = await AsyncStorage.getItem("lastLostLifeDate");
+      const today = new Date().toDateString();
+
+      // Configurar listener en tiempo real
+      unsubscribe = onSnapshot(dbRef, async (docSnapshot) => {
+        if (!docSnapshot.exists()) return;
+        
+        const userData = docSnapshot.data();
+        setUserLife(userData.Vidas); 
+
+        // Verificar si es un nuevo día y las vidas son menores a 2
+        if (userData.Vidas < 2 && lastLostLifeDate !== today) {
+          await updateDoc(dbRef, { Vidas: 2 }); 
+          await AsyncStorage.setItem("lastLostLifeDate", today); 
+          setNotVidasModalVisible(true); 
+        }
+      });
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+  setupSnapshotListener();
+
+  // Limpieza: desuscribirse del listener al desmontar o cambiar userId
+  return () => {
+    if (unsubscribe) {
+      unsubscribe(); // Asegúrate de cancelar la suscripción al desmontar
+    }
+  }
+}, [userId]);
+
+
+
 if(!userId){
   return <ActivityIndicator size="large" color="white" />
 }
@@ -93,29 +128,20 @@ if(!userId){
     >
     
        <SafeAreaView 
-       style={[
-         styles.safeArea, 
-         // Añadimos padding solo para Android
-         Platform.OS === 'android' && { paddingTop: RNStatusBar.currentHeight }
-       ]}
-     >
+       style={[ styles.safeArea, 
+  // Añadimos padding solo para Android
+  Platform.OS === 'android' && { paddingTop: RNStatusBar.currentHeight }]}>
         <ScrollView>
           <View style={styles.screen}>
+            <NotVidasModal visible={isNotVidasModalVisible} setVisible={setNotVidasModalVisible} />
 
            <HeaderHome />
-
+  
             <VersiculosDiarios />
            
             <ExploraComponent />
             <GuardadosComponents />
-
-            <BannerAd  unitId={adUnitId}
-             size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-             onAdLoaded={() => console.log('Ad loaded')} //verificar que el anuncio se haya cargado
-             onAdFailedToLoad={(error) => console.error('Ad failed to load:', error)} // verifica si hay algun error
-              
-             
-             />
+             <AdBanner />
           </View>
         </ScrollView>
       </SafeAreaView>

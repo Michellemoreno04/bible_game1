@@ -30,8 +30,10 @@ const DailyReading = () => {
   const [isRead, setIsRead] = useState(false);
   const [readingText, setReadingText] = useState([]);
   const [interstitialLoaded, setInternitialLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const userId = user.uid;
   const toast = useToast();
+   
 
 useEffect(() => {
     try {
@@ -148,6 +150,8 @@ useEffect(() => {
 
   // Función para reproducir el texto con Speech
   const handleSpeak = () => {
+
+    setIsLoading(true);
 // aqui vamos hacer que si el usuario sale de del componente se pare la lectura
     if (readingText.length === 0) return;
 // Limpiar cualquier reproducción pendiente antes de iniciar una nueva
@@ -159,7 +163,7 @@ useEffect(() => {
     if (!isSpeaking) {
       Speech.speak(textToSpeak, {
         language: 'es',
-        pitch: 0.9,
+        pitch: 0.8,
         rate: 0.9, // Velocidad de lectura
         onStart: () => setIsSpeaking(true),
         onDone: () => setIsSpeaking(false),
@@ -170,6 +174,7 @@ useEffect(() => {
       Speech.stop();
       setIsSpeaking(false);
     }
+    setIsLoading(false);
   };
 
   // Detener la reproducción al desmontar el componente
@@ -242,13 +247,16 @@ useEffect(() => {
     }
   };
 
+if(isLoading){
+  return <ActivityIndicator size="large" color="gray" />
+}
+
   if (readingText.length === 0) {
     
-   
     return (
       <View style={styles.emptyContainer}>
          <Feather name="book-open" size={60} color="gray" />
-          <Text style={styles.emptySubtext}>No hay lecturas disponibles</Text>
+          <Text style={styles.emptySubtext}>No hay lecturas  por hoy</Text>
       </View>
     );
   }
@@ -282,7 +290,7 @@ useEffect(() => {
               style={styles.audioIcon}
             />
             <Text style={styles.audioButtonText}>
-              {isSpeaking ? "Pausar lectura" : "Escuchar lectura"}
+              {isSpeaking ? 'Reproduciendo...' : 'Reproducir' || isLoading && 'Cargando...'}
             </Text>
           </TouchableOpacity>
         </View>

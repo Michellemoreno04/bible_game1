@@ -16,7 +16,8 @@
         "foregroundImage": "./assets/images/quizBible-logo.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.moreno.dev.Bible_game1"
+      "package": "com.moreno.dev.Bible_game1",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -28,8 +29,7 @@
         "react-native-google-mobile-ads",
         {
           "androidAppId": "ca-app-pub-9836483267876320~2353726828",
-          "iosAppId": "ca-app-pub-9836483267876320~2514822006" 
-                 
+          "iosAppId": "ca-app-pub-9836483267876320~2514822006"
         }
       ],
       "expo-build-properties",
@@ -55,6 +55,7 @@
       "eas": {
         "projectId": "e83e168f-b5c9-4951-a256-5cca2f43fe9f"
       }
-    }
+    },
+    "owner": "moreno.dev"
   }
 }

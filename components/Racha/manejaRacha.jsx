@@ -3,11 +3,7 @@ import { db } from '../firebase/firebaseConfig';
 import { Alert } from 'react-native';
 
 
-export const manejarRachaDiaria = async (
-  userId,
-  setShowModalRacha,
-  setShowModalRachaPerdida
-) => {
+export const manejarRachaDiaria = async (userId,setShowModalRacha,setShowModalRachaPerdida) => {
   try {
     const userDocRef = doc(db, 'users', userId);
     const userDoc = await getDoc(userDocRef);
@@ -26,14 +22,27 @@ export const manejarRachaDiaria = async (
         ? userData.modalRachaShow.toDate()
         : new Date(userData.modalRachaShow);
     } else {
-      await updateDoc(userDocRef, { modalRachaShow: hoy.toISOString() });
+      await updateDoc(userDocRef, {
+         modalRachaShow: hoy.toISOString()
+         });
       ultimaFecha = hoy;
     }
 
     let rachaActual = Number(userData?.Racha || 0);
     let rachaMaxima = Number(userData?.RachaMaxima || 0);
 
-    if (ultimaFecha < hoy) {
+     // Si es la primera vez del usuario (no tiene fecha registrada)
+     if (!userData.modalRachaShow) {
+      await updateDoc(userDocRef, {
+        modalRachaShow: hoy.toISOString(),
+        Racha: 1,
+        RachaMaxima: 1
+      });
+      setShowModalRacha(true);  // Mostrar modal de racha inicial
+      return;
+    }
+// Comparar con la fecha actual
+    if (ultimaFecha < hoy) { 
       const ayer = new Date(hoy);
       ayer.setDate(hoy.getDate() - 1);
 

@@ -1,6 +1,6 @@
 import { Link } from 'expo-router';
 import React, { useState } from 'react';
-import { View, TextInput, KeyboardAvoidingView, Text, Platform, Pressable, Alert, ScrollView,StyleSheet, Image, Linking, SafeAreaView,StatusBar as RNStatusBar } from 'react-native';
+import { View, TextInput, KeyboardAvoidingView, Text, Platform, Pressable, Alert, ScrollView,StyleSheet, Image, Linking, SafeAreaView,StatusBar as RNStatusBar, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import {auth,db} from '../components/firebase/firebaseConfig'
 import { useNavigation } from '@react-navigation/native';
@@ -21,7 +21,7 @@ const SignUp = () => {
     confirmPassword: '',
   });
   const [error, setError] = useState('');
-  const [vidas, setVidas] = useState(3);
+  const [vidas, setVidas] = useState(2);
   const [monedas, setMonedas] = useState(200);
   const [exp, setExp] = useState(0);
   const [nivel,setNivel] = useState(1);
@@ -29,6 +29,7 @@ const SignUp = () => {
   const [rachaMaxima, setRachaMaxima] = useState(0);
   const [avatarType, setAvatarType] = useState(null);
   const [imageUri, setImageUri] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigation();
 
@@ -43,6 +44,7 @@ const SignUp = () => {
   }));
 };
 const handleSignUp = () => {
+  setLoading(true);
   if (credenciales.name && credenciales.email && credenciales.password ) {
 createUserWithEmailAndPassword(auth, credenciales.email, credenciales.password)
   .then((userCredential) => {
@@ -66,16 +68,15 @@ createUserWithEmailAndPassword(auth, credenciales.email, credenciales.password)
       console.log(error);
       return error
     }
-
-
-    console.log('user logged');
-
+    }).finally(() => {
+      
+    setLoading(false);
     setCredenciales({
       name: '',
       email: '',
       password: '',
       confirmPassword: '',
-    })
+    });
 
     navigate.navigate('welcomeScreen');
 
@@ -187,7 +188,7 @@ const takePhoto = async () => {
       return null;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchCameraAsync({
             mediaTypes: ['images'],
             allowsEditing: true,
             aspect: [1, 1],
@@ -220,9 +221,10 @@ const handleImageSource = () => {
     ]
   );
 };
+
 return (
   <LinearGradient
-    colors={['#1D2671', '#C33764']}
+    colors={[ '#1E3A5F', '#3C6E9F']}
     style={styles.gradient}
   >
      <SafeAreaView 
@@ -336,13 +338,19 @@ return (
             {error && <Text style={styles.errorText}>{error}</Text>}
 
             {/* Botón de Registro */}
-            <Pressable
+            {
+              loading ? (
+                <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                <TouchableOpacity
               onPress={handleSignUp}
               style={styles.signupButton}
               android_ripple={{ color: '#ffffff50' }}
             >
               <Text style={styles.buttonText}>Regístrate</Text>
-            </Pressable>
+            </TouchableOpacity>
+              )
+            }
 
             {/* Sección de Redes Sociales */}
             {/*<View >

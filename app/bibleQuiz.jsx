@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ImageBackground, Animated,Platform, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ImageBackground, Animated,Platform, ActivityIndicator,Dimensions, ScrollView } from 'react-native';
 import { AntDesign, FontAwesome5, MaterialCommunityIcons, Octicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,6 +19,7 @@ import { InterstitialAd, AdEventType, TestIds } from 'react-native-google-mobile
 import RewardedAdModal from '../components/Modales/modalNotVidas';
 
 
+
 const adUnitId = __DEV__
  ? TestIds.INTERSTITIAL
  : Platform.OS === 'ios'
@@ -30,12 +31,15 @@ const interstitial = InterstitialAd.createForAdRequest(adUnitId, {
   keywords: ['religion', 'bible']// esto es para anuncios personalizados
 });
 
+const { width, height } = Dimensions.get('window');
+
+const responsiveWidth = width * 0.9; // 90% del ancho de pantalla
+const responsiveHeight = height * 0.07; // 7% del alto
 
 const BibleQuiz = () => {
   const navigation = useNavigation();
   const playSound = useSound();
   const { startMusic, stopMusic, isMuted, toggleMute } = useBackgroundMusic();
-
   const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [respuestaSeleccionada, setRespuestaSeleccionada] = useState(null);
@@ -45,7 +49,6 @@ const BibleQuiz = () => {
   const [showModalRacha, setShowModalRacha] = useState(false);
   const [showModalRachaPerdida, setShowModalRachaPerdida] = useState(false);
   const [resultadoRespuestas, setResultadoRespuestas] = useState(0);
-  const [monedasGanadas, setMonedasGanadas] = useState(0);
   const [expGanada, setExpGanada] = useState(0);
   const [preguntasRespondidas, setPreguntasRespondidas] = useState([]);
   const [showNivelModal, setShowNivelModal] = useState(false);
@@ -54,13 +57,12 @@ const BibleQuiz = () => {
   const { user } = useAuth();
   const userId = user?.uid;
 
-
-
 // Cargar el anuncio
   useEffect(() => {
     try {
       const unsubscribeLoaded = interstitial.addAdEventListener(AdEventType.LOADED, () => {
         setInternitialLoaded(true);
+        console.log('interstitial cargado0');
       });
   
       const unsubscribeOpened = interstitial.addAdEventListener(AdEventType.OPENED, () => {
@@ -74,16 +76,14 @@ const BibleQuiz = () => {
         if (Platform.OS === 'ios') {
           StatusBar.setHidden(false)
         }
+        stopMusic();
         setShowModal(false);
         
       });
   
       // Start loading the interstitial straight away
       interstitial.load();
-  
-      
- 
-      console.log('interstitial en el quiz')
+     
 
     // Unsubscribe from events on unmount
     return () => {
@@ -94,24 +94,23 @@ const BibleQuiz = () => {
   } catch (error) {
     console.log(error)
         }
-  }, [ interstitial ]);
+  }, []);
 
-  // mostrar los anuncios
-  const showAds = () => {
-    if(interstitialLoaded){
+  const showAds = () => { 
+    stopMusic();
       interstitial.show();
-
+ 
       interstitial.addAdEventListener(AdEventType.CLOSED, () => {
         
         setShowModal(false);
         mostrarModalRacha();
-        navigation.navigate('(tabs)'); // Redirigir a Home después de cerrar el anuncio
+        navigation.navigate('(tabs)'); 
+
       });
+if(!interstitialLoaded){
 
-    } else {
-      navigation.navigate('(tabs)'); // Si no hay anuncio, ir a Home directamente
-    }
-
+  navigation.navigate('(tabs)');
+}
     
   }
 
@@ -191,9 +190,6 @@ const BibleQuiz = () => {
   
     fetchQuestions();
   }, []);
-  
-  
-
 
   // Escucha en tiempo real para obtener los datos del usuario
   useEffect(() => {
@@ -246,8 +242,6 @@ const marcarPreguntaRespondida = async (questionId, questionIndex) => {
   }
 };
 
-
-
 // Escucha cambios en el documento del usuario
 useEffect(() => {
   const userDocRef = doc(db, 'users', user?.uid);
@@ -262,65 +256,88 @@ useEffect(() => {
 
   // Función para comprobar la respuesta seleccionada
   const comprobarRespuesta = async () => {
+    // Primero verificamos si se seleccionó alguna respuesta.
     if (respuestaSeleccionada === null) {
       Alert.alert('Por favor, selecciona una respuesta.');
       return;
     }
-
+  
+    // Caso: Respuesta correcta
     if (respuestaSeleccionada === correcta) {
+      // Reproducir sonido de respuesta correcta.
       await playSound(require('../assets/sound/correct-choice.mp3'));
-
+  
+      // Sumamos 15 puntos de experiencia.
       setExpGanada((prevExp) => prevExp + 15);
-      setMonedasGanadas((prevMonedas) => prevMonedas + 10);
-      setResultadoRespuestas(resultadoRespuestas + 1);
-      await marcarPreguntaRespondida(questions[currentQuestion]?.questionId, questions[currentQuestion]?.index);
-
+      // Actualizamos el contador de respuestas correctas.
+      // Usamos una variable local para tener el nuevo total sin depender del estado asíncrono.
+      const nuevasRespuestasCorrectas = resultadoRespuestas + 1;
+      setResultadoRespuestas(nuevasRespuestasCorrectas);
+  
+      // Marcamos la pregunta como respondida.
+      await marcarPreguntaRespondida(
+        questions[currentQuestion]?.questionId,
+        questions[currentQuestion]?.index
+      );
+  
+      // Actualizamos la experiencia en la base de datos inmediatamente.
+      // NOTA: No actualizamos las monedas en cada pregunta correcta.
+      const userDocRef = doc(db, 'users', userId);
+      await updateDoc(userDocRef, {
+        Exp: userInfo.Exp + 15,
+      });
+  
+      // Si aún quedan preguntas por contestar, avanzamos a la siguiente.
       if (currentQuestion < questions.length - 1) {
-        const userDocRef = doc(db, 'users', userId);
-        await updateDoc(userDocRef, {
-          Exp: userInfo.Exp + 15,
-          Monedas: userInfo.Monedas,
-        });
-
         setCurrentQuestion(currentQuestion + 1);
         setRespuestaSeleccionada(null);
       } else {
-        const userDocRef = doc(db, 'users', userId);
+        // Al finalizar el quiz, calculamos las monedas ganadas:
+        // 10 monedas por cada respuesta correcta acumulada.
+        const totalMonedas = nuevasRespuestasCorrectas * 10;
         await updateDoc(userDocRef, {
-          Monedas: userInfo.Monedas + monedasGanadas + 10,
+          // Sumamos las monedas totales ganadas al valor actual.
+          Monedas: userInfo.Monedas + totalMonedas,
         });
-
+        // Guardamos la fecha del quiz en AsyncStorage.
         const today = new Date().toDateString();
         await AsyncStorage.setItem("lastQuizDate", today);
-        console.log('Fecha del último quiz guardada:', today);
-
+        // Mostramos el modal final.
         setShowModal(true);
       }
     } else {
+      // Caso: Respuesta incorrecta.
+      // Se muestra cuál era la respuesta correcta.
       setMostrarRespuestaCorrecta(true);
       await playSound(require('../assets/sound/incorrect-choice.mp3'));
-
+  
       setTimeout(async () => {
         const userDocRef = doc(db, 'users', userId);
-
-        if (userInfo.Vidas >= 1) { 
+  
+        if (userInfo.Vidas >= 1) {
           try {
+            // Se resta una vida.
             await updateDoc(userDocRef, {
               Vidas: userInfo.Vidas - 1,
             });
             setUserInfo((prevUserInfo) => ({
               ...prevUserInfo,
-              Vidas: prevUserInfo.Vidas,
+              Vidas: prevUserInfo.Vidas - 1,
             }));
-
+  
+            // Si quedan preguntas, avanzamos a la siguiente.
             if (currentQuestion < questions.length - 1) {
               setMostrarRespuestaCorrecta(false);
               setCurrentQuestion(currentQuestion + 1);
               setRespuestaSeleccionada(null);
             } else {
+              // Al finalizar el quiz, actualizamos las monedas con las respuestas correctas acumuladas.
+              const totalMonedas = resultadoRespuestas * 10;
+              await updateDoc(userDocRef, {
+                Monedas: userInfo.Monedas + totalMonedas,
+              });
               const today = new Date().toDateString();
               await AsyncStorage.setItem("lastQuizDate", today);
-              console.log('Fecha del último quiz guardada:', today);
               setShowModal(true);
               stopMusic();
             }
@@ -329,21 +346,22 @@ useEffect(() => {
             Alert.alert('Error', 'No se pudieron actualizar las vidas.');
           }
         } else {
+          // Si no quedan vidas.
           setShowModalNotVidas(true);
-
+          // Calculamos las monedas ganadas usando el total de respuestas correctas acumuladas.
+          const totalMonedas = resultadoRespuestas * 10;
           await updateDoc(userDocRef, {
-            Monedas: userInfo.Monedas + monedasGanadas,
+            Monedas: userInfo.Monedas + totalMonedas,
           });
-
           const today = new Date().toDateString();
           await AsyncStorage.setItem("lastQuizDate", today);
-          console.log('Fecha del último quiz guardada:', today);
-         // setShowModal(true);
           stopMusic();
         }
       }, 2000);
     }
   };
+  
+  
 
   // Función para saltar una pregunta
   const skip = async () => {
@@ -409,18 +427,16 @@ useEffect(() => {
   };
 
 
-  const showTextoBiblico = () => {
-    Alert.alert(referencia, textoBiblico, [{ text: 'Cerrar' }]);
-  };
-
   const mostrarModalRacha = () => {
     setShowModal(false);
-    stopMusic();
-    setTimeout(() => {
+    stopMusic(); 
       manejarRachaDiaria(userId, setShowModalRacha, setShowModalRachaPerdida);
+      
       navigation.navigate('(tabs)');
-    }, 1000);
+    
   };
+
+ 
 
   const salir = () => {
     Alert.alert('Salir', '¿Seguro que deseas salir?', [
@@ -437,6 +453,7 @@ useEffect(() => {
     ]);
   };
 
+  
   // Resetear el estado cuando cambia la pregunta
   useEffect(() => {
     setMostrarRespuestaCorrecta(false);
@@ -462,11 +479,6 @@ useEffect(() => {
    }
     
   }, []);
-
-
-  if (!userId) {
-   return <ActivityIndicator size="large" />
-  }
 
 
 // Animaciones
@@ -495,9 +507,6 @@ useEffect(() => {
   });
 }, [currentQuestion, pregunta]); // Añadir currentQuestion como dependencia
 
-  if (!interstitial) {
-    return null;
-  } 
 
   const addLive = async () => {
     const userDocRef = doc(db, 'users', userId);
@@ -524,21 +533,37 @@ useEffect(() => {
     setShowModal(true);
 
   }
+  const cerrarPuntuacionModal = () => {
+    setShowModal(false);
+    stopMusic();
+    navigation.navigate('(tabs)');
+
+  }
+
+  if (!interstitial) {
+    return null;
+  } 
+  if (!userId) {
+    return <ActivityIndicator size="large" />
+   }
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ModalPuntuacion userInfo={userInfo} expGanada={expGanada} monedasGanadas={monedasGanadas} respuestasCorrectas={resultadoRespuestas} isVisible={showModal} onClose={mostrarModalRacha} showAds={showAds} />
+      <ModalPuntuacion userInfo={userInfo} mostrarModalRacha={mostrarModalRacha} expGanada={expGanada} monedasGanadas={resultadoRespuestas * 10} respuestasCorrectas={resultadoRespuestas} isVisible={showModal} onClose={mostrarModalRacha} cerrar={cerrarPuntuacionModal}/>
       <ModalRacha userInfo={userInfo} isVisible={showModalRacha} setShowModalRacha={setShowModalRacha} />
       <ModalRachaPerdida userInfo={userInfo} isVisible={showModalRachaPerdida} setShowModalRachaPerdida={setShowModalRachaPerdida} />
       <NivelModal Exp={userInfo.Exp} nivel={userInfo?.Nivel} isVisible={showNivelModal} onClose={() => setShowNivelModal(false)}/>
-      <RewardedAdModal isVisible={showModalNotVidas} onClose={cerrarRewardModal} addLife={addLive }  />
-        
+      <RewardedAdModal isVisible={showModalNotVidas} onClose={cerrarRewardModal} addLife={addLive } />
 <ImageBackground 
         source={require('../assets/images/bg-quiz.png')} 
          resizeMode="cover" 
         style={styles.backgroundImage}
       >
         <View style={styles.mainContainer}>
+      <ScrollView 
+    contentContainerStyle={styles.scrollContainer}
+    showsVerticalScrollIndicator={false}
+  >
           <View style={styles.header}>
             <TouchableOpacity onPress={salir} style={styles.homeButton}>
               <MaterialCommunityIcons 
@@ -568,11 +593,12 @@ useEffect(() => {
                 />
               </TouchableOpacity>
             </View>
+  
 
             <Animated.View style={[styles.questionContainer, { opacity: questionOpacity }]}>
             <Text
               style={styles.referenceText}
-              onPress={showTextoBiblico}
+              
             >
               {referencia}
             </Text>
@@ -638,6 +664,8 @@ useEffect(() => {
               </TouchableOpacity>
             </View>
           </View>
+</ScrollView>
+
         </View>
       </ImageBackground>
     </SafeAreaView>
@@ -650,11 +678,9 @@ const styles = StyleSheet.create({
   },
   backgroundImage: {
     flex: 1,
-    width: '100%'
+    
   },
   mainContainer: {
-   
-    width: '100%',
     alignItems: 'center'
   },
   header: {
@@ -662,8 +688,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    
+ 
   },
   homeButton: {
     
@@ -677,7 +702,6 @@ const styles = StyleSheet.create({
   statusBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    
   },
   statusText: {
     marginHorizontal: 10,
@@ -686,26 +710,31 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     width: '100%',
-    height: '100%',
     alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: 20,
     
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    paddingBottom: height * 0.1,
   },
   muteButtonContainer: {
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'flex-end',
   position: 'relative',
-  bottom: 20,
+  bottom: 5,
+  
   },
  
   questionContainer: {
-    width: '100%',
-    height: 200,
+    width: responsiveWidth,
+    minHeight: height * 0.25,
+    maxHeight: height * 0.4,
     borderRadius: 20,
     padding: 8,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    marginBottom: 20,
+    marginBottom: 15,
     justifyContent: 'center',
     alignItems: 'center'
   },
@@ -717,7 +746,8 @@ const styles = StyleSheet.create({
     padding: 8
   },
   questionText: {
-    fontSize: 24,
+    fontSize: width * 0.05,
+    maxWidth: '90%',
     fontWeight: 'bold',
     color: 'white',
     textAlign: 'center'
@@ -727,13 +757,14 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   answerButton: {
-    width: 370,
-    height: 64,
+    width: responsiveWidth,
+    height: responsiveHeight,
+    minHeight: 60,
     borderRadius: 50,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 4,
+    marginVertical: 2,
     borderWidth: 2,
   
   
@@ -753,20 +784,22 @@ const styles = StyleSheet.create({
   },
   answerText: {
     
-    fontSize: 18,
+    fontSize: width * 0.05,
+    textAlign: 'center',
     color: 'white',
     fontWeight: 'bold'
   },
   checkButton: {
-    width: 208,
-    height: 64,
+    width: responsiveWidth * 0.7,
+    height: responsiveHeight,
+    marginVertical: height * 0.02,
     borderRadius: 50,
     backgroundColor: 'rgba(0, 0, 255, 0.8)',
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
-    marginVertical: 20
+    
   },
   checkButtonText: {
     fontSize: 18,
@@ -780,8 +813,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionButton: {
-    width: 200,
-    height: 80,
+    width: responsiveWidth * 0.45,
+    height: height * 0.1,
+    margin: width * 0.02,
     borderRadius: 15,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'center',

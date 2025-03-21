@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Pressable, Alert,width } from 'react-native'
+import { View, Text, StyleSheet, Pressable, Alert, Dimensions } from 'react-native'
 import React from 'react'
 import Modal from 'react-native-modal' // Nota: Se recomienda usar "react-native-modal" para los props isVisible, animationIn, etc.
 import { FontAwesome5 } from '@expo/vector-icons'
@@ -9,11 +9,14 @@ import { db } from '../../components/firebase/firebaseConfig'
 import useAuth from '../authContext/authContext'
 import { MaterialIcons } from '@expo/vector-icons'
 
+
+const { width, height } = Dimensions.get('window');
+
 export function ModalRachaPerdida({ userInfo,isVisible, setShowModalRachaPerdida }) {
   const { user } = useAuth();
 
   const userId = user.uid;
-  const coinsRequired = 500;
+  const coinsRequired = 1000;
 
   // Funciones dummy para manejar las acciones de los botones.
   const userDocRef = doc(db, 'users', userId);
@@ -26,33 +29,31 @@ if (coins >= coinsRequired) {
     Monedas: coinsAfterPayment
   });
 }else{
-  Alert.alert('No tienes suficientes monedas para pagar.','quieres ver videos para obtener monedas?');
+  Alert.alert('No tienes suficientes monedas para pagar.');
 }
   setShowModalRachaPerdida(false);  
-  
-  
-  
-  }
+
+  };
 
   // lógica para reiniciar la racha (sin pago).
   const handleReset = () => {
     console.log("La racha se reinicia.");
    const rachaReiniciada = 1;
-
     updateDoc(userDocRef, {
       Racha: rachaReiniciada
     });
 
     setShowModalRachaPerdida(false);
 
-  };
 
+  };
+//8
   return (
     <Modal
     isVisible={isVisible}
     animationIn="zoomIn"
     animationOut="zoomOut"
-    backdropOpacity={0.9}
+    backdropOpacity={0.7}
     onBackdropPress={() => setShowModalRachaPerdida(false)}
   >
     <View style={styles.container}>
@@ -70,7 +71,7 @@ if (coins >= coinsRequired) {
         {/* Animación */}
         <View style={styles.animationContainer}>
           <LottieView
-            source={require('../../assets/lottieFiles/fireRachaIcon.json')}
+            source={require('../../assets/lottieFiles/rachaPerdida.json')}
             autoPlay
             loop
             style={styles.animation}
@@ -83,8 +84,10 @@ if (coins >= coinsRequired) {
         </Text>
 
         <Text style={styles.descriptionText}>
-          Pero puedes pagar 
-          <FontAwesome5 name="coins" size={18} color="#FFD700" /> {'500 Monedas '} 
+          Pero puedes pagar
+          
+          <FontAwesome5 name="coins" size={18} color="#FFD700" />
+           {' 1000 Monedas '} 
            para mantenerla
         </Text>
 
@@ -161,8 +164,9 @@ container: {
 },
 gradientContainer: {
   width: width * 0.9,
+  
   borderRadius: 30,
-  padding: 25,
+  padding: 20,
   alignItems: 'center',
   borderWidth: 4,
   borderColor: '#FFB80299',
@@ -175,11 +179,11 @@ gradientContainer: {
 header: {
   flexDirection: 'row',
   alignItems: 'center',
-  marginBottom: 20,
-  gap: 10,
+ 
+  
 },
 title: {
-  fontSize: 22,
+  fontSize: 20,
   fontWeight: '800',
   color: '#FFD700',
   textTransform: 'uppercase',
@@ -190,18 +194,21 @@ title: {
   textShadowRadius: 15,
 },
 animationContainer: {
-  width: 200,
-  height: 200,
+  width: 150,
+  height: 150,
+  alignItems: 'center',
+  justifyContent: 'center',
   borderRadius: 100,
   borderWidth: 4,
   borderColor: '#FFB80299',
-  marginVertical: 15,
+  marginVertical: 5,
   backgroundColor: '#00000022',
   overflow: 'hidden',
 },
 animation: {
-  width: '100%',
-  height: '100%',
+  width: width * 0.3,
+  height: height * 0.3,
+  
 },
 highlightedText: {
   fontSize: 20,
@@ -219,19 +226,19 @@ descriptionText: {
   fontSize: 16,
   lineHeight: 24,
   textAlign: 'center',
-  marginBottom: 20,
+ 
 },
 statsContainer: {
   flexDirection: 'row',
   gap: 15,
   width: '100%',
-  marginVertical: 15,
+  marginVertical: 10,
 },
 statBox: {
   flex: 1,
   alignItems: 'center',
   padding: 15,
-  borderRadius: 20,
+  borderRadius: 10,
   borderWidth: 2,
   borderColor: '#FFB80233',
 },

@@ -11,11 +11,90 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { RewardedAd, RewardedAdEventType, TestIds } from 'react-native-google-mobile-ads';
+import { useState, useEffect } from 'react';
+import  useAuth  from '../authContext/authContext';
+import {doc,updateDoc,increment} from 'firebase/firestore';
+import {db} from '../../components/firebase/firebaseConfig';
+
+
+
+const adUnitId = __DEV__ 
+? TestIds.REWARDED 
+: Platform.OS === 'ios' ? process.env.EXPO_PUBLIC_REWARDED_ID_IOS 
+: process.env.EXPO_PUBLIC_REWARDED_ID_ANDROID;
 
 export const NoCoinsModal = ({ visible, onClose }) => {
   const scaleValue = React.useRef(new Animated.Value(0)).current;
   const translateY = React.useRef(new Animated.Value(0)).current;
   const [isVisible, setIsVisible] = React.useState(visible);
+  const [loaded, setLoaded] = useState(false);
+  const [rewardedAd, setRewardedAd] = useState(null);
+
+const {user} = useAuth();
+ const userId = user?.uid;
+
+  useEffect(() => {
+    if (isVisible) {
+      // Crear nueva instancia cada vez que se abre el modal
+      const newRewarded = RewardedAd.createForAdRequest(adUnitId, {
+        keywords: ['religion', 'bible'],
+      });
+      
+      const unsubscribeLoaded = newRewarded.addAdEventListener(
+        RewardedAdEventType.LOADED,
+        () => {
+          setLoaded(true);
+          console.log('Anuncio recompensa cargado correctamente');
+        }
+      );
+
+      const unsubscribeEarned = newRewarded.addAdEventListener(
+        RewardedAdEventType.EARNED_REWARD,
+        (reward) => {
+          console.log('Recompensa obtenida:', reward);
+          
+           
+        }
+      );
+      // Cargar el anuncio
+      newRewarded.load();
+      setRewardedAd(newRewarded);
+
+      // Limpiar al cerrar
+      return () => {
+        unsubscribeLoaded();
+        unsubscribeEarned();
+        setLoaded(false);
+        setRewardedAd(null);
+      };
+    }
+  }, [isVisible]);
+
+  const addCoin = async () => {
+    const userDocRef = doc(db, 'users', userId);
+    await updateDoc(userDocRef, {
+      Monedas: increment(100),
+    });
+  };
+
+  const handleShowAd = async () => {
+    if (loaded && rewardedAd) {
+      try {
+        await rewardedAd.show();
+
+      } catch (error) {
+        console.log('Error al mostrar el anuncio:', error);
+        
+      } finally {
+        addCoin();
+        setIsVisible(false);
+        onClose();
+        
+      }
+
+    }
+  };
 
   React.useEffect(() => {
     if (visible) {
@@ -49,10 +128,7 @@ export const NoCoinsModal = ({ visible, onClose }) => {
     }
   }, [visible]);
 
-  const handleWatchAd = () => {
-    console.log('Mostrar anuncios');
-    onClose();
-  };
+ 
 
   return (
     <Modal
@@ -98,7 +174,7 @@ export const NoCoinsModal = ({ visible, onClose }) => {
 
             <TouchableOpacity 
               style={styles.primaryButton}
-              onPress={handleWatchAd}
+              onPress={handleShowAd}
               activeOpacity={0.9}>
               <LinearGradient
                 colors={['#4CAF50', '#45A049']}
@@ -106,7 +182,7 @@ export const NoCoinsModal = ({ visible, onClose }) => {
                 start={{ x: 0, y: 0.5 }}
                 end={{ x: 1, y: 0.5 }}>
                 <Ionicons name="play-circle" size={24} color="white" />
-                <Text style={styles.buttonText}>Ver Anuncio</Text>
+                <Text style={styles.buttonText}>{loaded ? 'Ver Anuncio' : 'Cargando...'}</Text>
               </LinearGradient>
             </TouchableOpacity>
 
@@ -126,7 +202,7 @@ export const NoCoinsModal = ({ visible, onClose }) => {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
   },

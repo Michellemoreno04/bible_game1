@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet,width } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import Modal from 'react-native-modal';
 import LottieView from 'lottie-react-native';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import useAuth from '../authContext/authContext';
 import { useSound } from '../soundFunctions/soundFunction';
 import { LinearGradient } from 'expo-linear-gradient';
 
+const { width, height } = Dimensions.get('window');
 
 export function ModalRacha({ isVisible, setShowModalRacha }) {
   const { user } = useAuth();
@@ -43,7 +44,7 @@ export function ModalRacha({ isVisible, setShowModalRacha }) {
     <Modal
       isVisible={isVisible}
       onBackdropPress={closeModal}
-      backdropOpacity={0.90}
+      backdropOpacity={0.80}
       animationIn="zoomIn"
       animationOut="zoomOut"
       backdropTransitionInTiming={600}
@@ -149,8 +150,8 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-    gap: 10,
+    
+    
   },
   title: {
     fontSize: 22,
@@ -164,8 +165,8 @@ const styles = StyleSheet.create({
     textShadowRadius: 15,
   },
   animationContainer: {
-    width: 200,
-    height: 200,
+    width: width * 0.5,
+    height: width * 0.5,
     marginVertical: 10,
     justifyContent: 'center',
     alignItems: 'center',
@@ -183,27 +184,27 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFD700',
     textAlign: 'center',
-    marginVertical: 15,
-    lineHeight: 30,
-    textShadowColor: 'rgba(255, 107, 53, 0.4)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
+    marginVertical: 5,
+    lineHeight: 25,
+   
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    marginVertical: 15,
+    marginVertical: 5,
     gap: 15,
   },
   statBox: {
     flex: 1,
     alignItems: 'center',
     padding: 15,
-    borderRadius: 20,
+    borderRadius: 10,
     borderWidth: 2,
+    borderColor: '#FFB80239',
   },
   elevatedBox: {
+    
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.2,

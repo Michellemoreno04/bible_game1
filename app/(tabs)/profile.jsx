@@ -17,6 +17,7 @@ import { db } from '../../components/firebase/firebaseConfig';
 import { niveles } from '@/components/Niveles/niveles';
 import { Avatar, Icon } from '@rneui/themed';
 import {InsigniasComponent} from '@/components/insigniasComponents/insigniasComponents';
+import { AdBanner } from '@/components/ads/banner';
 
 export default function Profile() {
   const navigation = useNavigation();
@@ -134,6 +135,7 @@ export default function Profile() {
               </Text>
             </View>
           </View>
+          <AdBanner />
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>

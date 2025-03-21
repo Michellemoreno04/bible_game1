@@ -123,10 +123,10 @@ const handleAnimationPress = async () => {
     };
   
     const handleAnimationFinish = async () => {
-      animationRef.current?.play(0, 300);
+      animationRef.current?.play(0, 280);
+      navigation.navigate("bibleQuiz");
       setShowFullScreen(false);
  
-      navigation.navigate("bibleQuiz");
     };
 
   return (
@@ -194,7 +194,7 @@ const handleAnimationPress = async () => {
               <View style={styles.modalContainer}>
                 <LottieView
                   ref={animationRef}
-                  source={require("../../assets/lottieFiles/cerebro.json")}
+                  source={require("../../assets/lottieFiles/estudiando.json")}
                   autoPlay
                   loop={false}
                   style={styles.modalLottie}
@@ -217,6 +217,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 5,
   },
+
   title: {
     color: 'white',
     fontSize: 24,
@@ -234,18 +235,11 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 20,
-   
-   //backgroundColor: '#E8EDF4',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
     borderWidth: 1,
     borderColor: 'skyblue',
-   // shadowColor: '#000',
-   // shadowOffset: { width: 0, height: 0 },
-   // shadowOpacity: 0.2,
-   // shadowRadius: 10,
-   // elevation: 5,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     
   },
@@ -277,7 +271,7 @@ const styles = StyleSheet.create({
          height: "100%",
          justifyContent: "center",
          alignItems: "center",
-         backgroundColor: "skyblue",
+         backgroundColor: '#3C6E9F',
        },
        modalText: {
          fontSize: 26,
@@ -285,8 +279,8 @@ const styles = StyleSheet.create({
          color: "orange",
        },
        modalLottie: {
-         width: 400,
-         height: 400,
+         width: 300,
+         height: 300,
        },
 });
 

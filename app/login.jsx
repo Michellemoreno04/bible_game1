@@ -1,20 +1,20 @@
 import React, { useState } from 'react'
-import { Text, View, Pressable, Alert, TextInput,  ScrollView, SafeAreaView,Platform ,StyleSheet,StatusBar as RNStatusBar} from 'react-native'
+import { Text, View, Pressable, Alert, TextInput,  ScrollView, SafeAreaView,Platform ,StyleSheet,StatusBar as RNStatusBar, ActivityIndicator} from 'react-native'
 import { useNavigation } from '@react-navigation/native';
 import { Link } from 'expo-router';
 import { auth } from '../components/firebase/firebaseConfig';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { useRouter } from "expo-router";
 import { LinearGradient } from 'expo-linear-gradient';
-import { AntDesign, FontAwesome, MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { SigninComponents } from '../components/signinComponents/signinComponents';
 import  {StatusBar} from 'expo-status-bar'
+import { TouchableOpacity } from 'react-native';
 
 
 function Login() {
  
 const navigation = useNavigation();
-
+const [isLoading, setIsLoading] = useState(false);
 
 
 const [loginCredentials, setLoginCredentials] = useState({
@@ -31,6 +31,7 @@ const [loginCredentials, setLoginCredentials] = useState({
     };
 
     const handleLogin = () => {
+      setIsLoading(true);
       signInWithEmailAndPassword(auth, loginCredentials.email, loginCredentials.password)
         .then((userCredential) => {
           const user = userCredential.user;
@@ -42,12 +43,12 @@ const [loginCredentials, setLoginCredentials] = useState({
           const errorMessage = error.message;
           console.log('Login error:', errorCode, errorMessage);
           handleFirebaseError(error);
-        });
+        })
 
-      setLoginCredentials({
-        email: '',
-        password: ''
-      })
+        .finally(() => {
+          setIsLoading(false); // Desactiva el indicador en cualquier caso
+          setLoginCredentials({ email: '', password: '' }); // Mejor aquí
+        });
 
     }
 
@@ -81,7 +82,7 @@ const handleFirebaseError = (error) => {
  
 return (
   <LinearGradient
-    colors={['#1D2671', '#C33764']}
+    colors={[ '#1E3A5F', '#3C6E9F']}
     style={styles.gradient}
   >
      <SafeAreaView 
@@ -145,13 +146,20 @@ return (
             </Link>
               
             {/* Login Button */}
-            <Pressable
+           {
+            isLoading ? (
+              <ActivityIndicator size="large" color="#FFF" />
+            ) : (
+              <TouchableOpacity
               onPress={handleLogin}
               style={styles.loginButton}
               android_ripple={{ color: '#ffffff50' }}
             >
               <Text style={styles.buttonText}>Acceder</Text>
-            </Pressable>
+            </TouchableOpacity>
+            )
+            
+           }
 
             {/* Social Login */}
             <View style={styles.socialContainer}>

@@ -15,7 +15,7 @@ export default function SignUpScreen() {
 
   return (
     <LinearGradient 
-      colors={['#1D2671', '#C33764']}
+      colors={[ '#1E3A5F', '#3C6E9F']}
       style={styles.gradient}
     >
         <SafeAreaView 
@@ -32,13 +32,13 @@ export default function SignUpScreen() {
         <View style={styles.container}>
           {/* Sección de Logo y Título */}
           <View style={styles.header}>
-            <Text style={styles.title}>BibleBrain</Text>
-            <Text style={styles.subtitle}>Bienvenido a BibleBrain</Text>
+            <Text style={styles.title}>QuizBible</Text>
+            <Text style={styles.subtitle}>Bienvenido a QuizBible</Text>
           </View>
 
           {/* Mensaje de Bienvenida */}
           <Text style={styles.description}>
-            Nuestra app está diseñada para ayudarte a estudiar la Biblia todos los días y fortalecer tu relación espiritual.
+            Una app está diseñada para ayudarte a estudiar la Biblia todos los días y fortalecer tus conocimientos biblicos.
           </Text>
 
           {/* Animación Lottie */}
@@ -94,13 +94,12 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 48
+    marginBottom:10
   },
   title: {
     fontSize: 48,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 8,
     textShadowColor: 'rgba(0, 0, 0, 0.25)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4
@@ -110,8 +109,11 @@ const styles = StyleSheet.create({
     color: '#e2e8f0'
   },
   description: {
+    
+
     textAlign: 'center',
     fontSize: 18,
+    fontWeight: '500',
     color: '#e2e8f0',
     marginBottom: 24
   },
@@ -120,8 +122,8 @@ const styles = StyleSheet.create({
     marginBottom: 40
   },
   animation: {
-    width: 300,
-    height: 300
+    width: 250,
+    height: 250
   },
   signupButton: {
     backgroundColor: '#f59e0b',

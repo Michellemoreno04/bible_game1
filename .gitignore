@@ -3,6 +3,9 @@
 # dependencies
 node_modules/
 google-services.json
+bible-game1-firebase-adminsdk-fbsvc-705b696f7d.json
+app.json
+
 
 # Expo
 .expo/
@@ -11,7 +14,7 @@ web-build/
 expo-env.d.ts
 .env
 .easingnore
-app.json
+
 
 
 

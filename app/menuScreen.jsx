@@ -1,4 +1,4 @@
-import { StyleSheet, ScrollView, View, Text, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, ScrollView, View, Text, TouchableOpacity, Alert, Linking } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import useAuth from '../components/authContext/authContext';
 import { useNavigation } from 'expo-router';
@@ -24,6 +24,31 @@ const navigation = useNavigation();
       },
     ]);
   };
+
+ const goToPrivacyPolicy = async () => {
+  const url = 'https://docs.google.com/document/d/1rzBgeN8I0KuhB7rmxTLB7wfvlzUf8EGKzuA5P9hrb8g/edit?usp=sharing'; // Reemplaza con tu URL real
+  const supported = await Linking.canOpenURL(url);
+
+  if (supported) {
+    await Linking.openURL(url);
+  } else {
+    console.log("No se puede abrir la URL: " + url);
+  }
+  };
+
+  const goToTermsAndConditions = async () => {
+    const url = 'https://docs.google.com/document/d/13davQ2ObDbFsavuKs_Z4zKsULIEXGai3yte-bp74Soo/edit?usp=sharing'; 
+    const supported = await Linking.canOpenURL(url);
+  
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      console.log("No se puede abrir la URL: " + url);
+    }
+    };
+
+
+
   return (
     <SafeAreaView style={styles.container}>
     <ScrollView style={styles.container}>
@@ -36,20 +61,25 @@ const navigation = useNavigation();
           <Text style={styles.optionText}>Editar perfil</Text>
           <MaterialIcons name="chevron-right" size={24} color="#666" />
         </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.option}>
-          <Text className="text-gray-400">Privacidad</Text>
+        <TouchableOpacity style={styles.option} onPress={goToPrivacyPolicy}>
+          <Text style={styles.optionText}>Politica de privacidad</Text>
+          <MaterialIcons name="chevron-right" size={24} color="#666" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.option} onPress={goToTermsAndConditions}>
+          <Text style={styles.optionText}>Terminos y condiciones</Text>
           <MaterialIcons name="chevron-right" size={24} color="#666" />
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.option} onPress={() => Alert.alert('no disponible aun')}>
+        
+        
+        <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('soporte')}>
           <Text className="text-gray-400">Soporte</Text>
           <MaterialIcons name="chevron-right" size={24} color="#666" />
         </TouchableOpacity>
       </View>
 
       {/* Sección Secundaria */}
-      <View style={styles.section}>
+      {/*<View style={styles.section}>
         <Text style={styles.sectionTitle}>Preferencias</Text>
         
         <TouchableOpacity style={styles.option} onPress={() => Alert.alert('no disponible aun')}>
@@ -61,7 +91,7 @@ const navigation = useNavigation();
           <Text className="text-gray-400">Tema</Text>
           <MaterialIcons name="chevron-right" size={24} color="#666" />
         </TouchableOpacity>
-      </View>
+      </View>*/}
 
       {/* Cerrar Sesión */}
       <TouchableOpacity style={[styles.option, styles.logoutButton]} onPress={salir}>

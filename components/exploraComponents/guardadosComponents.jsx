@@ -5,36 +5,57 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
+  Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { AntDesign, FontAwesome5 } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
 
+// Helpers para dimensiones responsivas
+const { width, height } = Dimensions.get("window");
+const normalizeText = (size) => Math.round(size * (width / 375));
+
 export default function GuardadosComponents() {
   const navigation = useNavigation();
-  const { width } = Dimensions.get("window");
   const cardWidth = width * 0.43;
+  const cardPadding = width * 0.05;
 
   return (
-    <View >
+    <View style={styles.container}>
       <Text style={styles.title}>Guardados</Text>
       
-      <View style={styles.cardsContainer}>
+      <ScrollView 
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.cardsContainer}
+      >
         <TouchableOpacity
           onPress={() => navigation.navigate("versiculosFavoritos")}
           activeOpacity={0.9}
         >
           <LinearGradient
             colors={["#FF7E1F", "#FEB27B"]}
-            style={[styles.card, { width: cardWidth }]}
+            style={[
+              styles.card, 
+              { 
+                width: cardWidth,
+                padding: cardPadding,
+                minWidth: 160,
+                maxWidth: 200
+              }
+            ]}
           >
             <View style={styles.iconContainer}>
-              <FontAwesome5 name="book" size={24} color="white" />
+              <FontAwesome5 
+                name="book" 
+                size={normalizeText(24)} 
+                color="white" 
+              />
             </View>
             <Text style={styles.cardTitle}>Versículos Guardados</Text>
             <AntDesign
               name="arrowright"
-              size={20}
+              size={normalizeText(20)}
               color="white"
               style={styles.arrow}
             />
@@ -47,70 +68,90 @@ export default function GuardadosComponents() {
         >
           <LinearGradient
             colors={["#6A65FB", "#8C9EFF"]}
-            style={[styles.card, { width: cardWidth }]}
+            style={[
+              styles.card, 
+              { 
+                width: cardWidth,
+                padding: cardPadding,
+                minWidth: 160,
+                maxWidth: 200
+              }
+            ]}
           >
             <View style={styles.iconContainer}>
-              <FontAwesome5 name="book-open" size={24} color="white" />
+              <FontAwesome5 
+                name="book-open" 
+                size={normalizeText(24)} 
+                color="white" 
+              />
             </View>
             <Text style={styles.cardTitle}>Lecturas Recientes</Text>
             <AntDesign
               name="arrowright"
-              size={20}
+              size={normalizeText(20)}
               color="white"
               style={styles.arrow}
             />
           </LinearGradient>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
- 
+  container: {
+   // marginVertical: height * 0.02,
+    //paddingHorizontal: width * 0.04,
+  },
   title: {
     color: "white",
-    fontSize: 24,
-    fontWeight: "700",
-    marginBottom: 15,
+    fontSize: normalizeText(24),
+    fontWeight: Platform.OS === 'ios' ? '700' : 'bold',
+    marginBottom: height * 0.02,
     fontFamily: "Inter-Bold",
+    includeFontPadding: false,
   },
   cardsContainer: {
     flexDirection: "row",
-    
-    gap: 15,
+    gap: width * 0.04,
+    paddingBottom: width * 0.02,
   },
   card: {
-    borderRadius: 20,
+    borderRadius: normalizeText(20),
     borderWidth: 2,
     borderColor: "rgba(255, 255, 255, 0.5)",
-    padding: 20,
     aspectRatio: 1,
     justifyContent: "space-between",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { 
+      width: 0, 
+      height: normalizeText(4) 
+    },
     shadowOpacity: 0.1,
-    shadowRadius: 10,
+    shadowRadius: normalizeText(10),
     elevation: 5,
   },
   iconContainer: {
     backgroundColor: "rgba(255, 255, 255, 0.2)",
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: normalizeText(48),
+    height: normalizeText(48),
+    borderRadius: normalizeText(24),
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: height * 0.01,
   },
   cardTitle: {
     color: "white",
-    fontSize: 18,
+    fontSize: normalizeText(16),
     fontWeight: "600",
-    lineHeight: 24,
+    lineHeight: normalizeText(24),
     fontFamily: "Inter-SemiBold",
+    position:'relative',
+    top: height * 0.03
   },
   arrow: {
     alignSelf: "flex-end",
-    marginTop: 10,
+   
   },
 });

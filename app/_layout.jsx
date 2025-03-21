@@ -11,6 +11,8 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 import { AuthProvider } from "../components/authContext/authContext";
 import { ToastProvider } from 'react-native-toast-notifications'
+import { NotificationProvider} from "@/components/notificationContext/notificationContext";
+import * as Notifications from "expo-notifications";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -47,7 +49,18 @@ export default function RootLayout() {
     
   };
 
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
+  
+ 
+
   return (
+    <NotificationProvider>
     <ToastProvider>
       <AuthProvider>
        
@@ -151,11 +164,22 @@ export default function RootLayout() {
                 
               }}
             />
+            <Stack.Screen
+              name="soporte"
+              options={{
+                headerShown: true,
+                headerBackTitle: "volver",
+                presentation: "modal",
+                
+                
+              }}
+            />
             <Stack.Screen name="+not-found" />
           </Stack>
           <StatusBar style="auto" />
         
       </AuthProvider>
       </ToastProvider>
+      </NotificationProvider>
   );
 }

@@ -1,9 +1,9 @@
 # Welcome to your Expo app 👋
 
 # Cosas pendientes
-1. 
+1. terminalñ de configurar las notificaciones push
 2. regenerar las keys de firebase y las de google por mayor seguridad
-3. mejorar el audio de lecturas
+3. 
 4. borrar las keys de github
 5. 
 6. 
@@ -16,9 +16,11 @@
 
 # Cosas Hechas
 
-1. bugs arreglados
-2. funcion para Recuperar contraseña 
-3. funcionalidad para añadir vidas con ads
-4. solo reproducir sonido si esta en el compoenent de lectura
-5. notificaciones push añadidas con (nativenotify)
-6. ads para ios añadidos tambien 
+1. terminos y condiciones añadidas
+2. politica de privacidad 
+3. mejora de estilos adatativos a cualquier telefono
+4. mejoras en mostrar anuncios 
+5. bugs arreglados de la version anterior 
+6. welcome screen modificada 
+7. añadi una soporte screen
+8. modal que actualiza las vidas añadido (temporalmente hast que se arreglen las notificaciones)

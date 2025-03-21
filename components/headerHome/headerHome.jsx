@@ -71,19 +71,22 @@ export const HeaderHome = () => {
           guardarInsignia();
         }, [userAuthenticated.Exp, userId]);
 
+        
     return (
         <View style={styles.headerContainer}>
         <View style={styles.leftContainer}>
-          <Avatar
-            size={60}
-            rounded
-            {
-              ...userAuthenticated?.FotoPerfil 
-                ? { source: { uri: userAuthenticated.FotoPerfil } }
-                : { title: userAuthenticated?.Name?.charAt(0) } 
-            }
-            avatarStyle={{ borderWidth: 1, borderColor: '#fff', backgroundColor: '#4f46e5',zIndex: -1,overflow: 'hidden',borderRadius: 100, }}
-          />
+        <Avatar
+          size={60}
+          rounded
+          containerStyle={{
+            backgroundColor: userAuthenticated?.FotoPerfil ? 'transparent' : 'orange',
+          }}
+          {...(userAuthenticated?.FotoPerfil
+            ? { source: { uri: userAuthenticated?.FotoPerfil } }
+            : { title: userAuthenticated?.Name?.charAt(0) }
+          )}
+          avatarStyle={styles.avatar} />
+
           <View style={styles.userInfo}>
             <Text style={styles.greeting}>
               {`Hola!, ${userAuthenticated?.Name || 'Anónimo'}`}
@@ -112,6 +115,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 10,
         marginBottom: 15,
+      },
+      avatar: {
+        width: 60,
+        height: 60,
+        borderRadius: 100,
+        borderWidth: 2,
+        borderColor: 'white',
+       
       },
       leftContainer: {
         flexDirection: 'row',
